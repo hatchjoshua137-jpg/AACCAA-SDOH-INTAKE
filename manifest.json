@@ -1,0 +1,12 @@
+{
+  "name": "SDOH Assessment Tool — AACCAA FY27",
+  "short_name": "SDOH Intake",
+  "description": "AACCAA FY27 SDOH participant assessment, referral, follow-up and exit tool. Collects no data on this site — all case data stays on the navigator's device and the program's SharePoint.",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#f4f6f9",
+  "theme_color": "#1f3a5f",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

@@ -1,0 +1,1751 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SDOH Assessment Tool — AACCAA FY27</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1f3a5f">
+<style>
+  :root{
+    --navy:#1f3a5f; --navy-dark:#16293f; --teal:#0e7c7b; --teal-light:#e0f2f1;
+    --bg:#f4f6f9; --card:#ffffff; --line:#d9dfe7; --text:#1d2733; --muted:#5b6b7c;
+    --ok:#1a7f37; --warn:#b45309; --bad:#b3261e; --chip:#eef2f7;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{font-family:"Segoe UI",Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.45}
+  header.app{background:var(--navy);color:#fff;padding:14px 22px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  header.app .brand{font-size:19px;font-weight:700;letter-spacing:.2px}
+  header.app .sub{font-size:12.5px;opacity:.85}
+  header.app .spacer{flex:1}
+  header.app button{background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.35);border-radius:6px;padding:7px 14px;font-size:13.5px;cursor:pointer}
+  header.app button:hover{background:rgba(255,255,255,.22)}
+  header.app button.active{background:#fff;color:var(--navy);font-weight:600}
+  main{max-width:1120px;margin:0 auto;padding:20px 18px 60px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px 20px;margin-bottom:16px}
+  .card h2{margin:0 0 4px;font-size:17px;color:var(--navy)}
+  .card h3{margin:16px 0 6px;font-size:14.5px;color:var(--navy)}
+  .card h4{margin:12px 0 4px;font-size:13.5px;color:var(--teal)}
+  .card .hint{font-size:12.5px;color:var(--muted);margin:0 0 10px}
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+  .btn{background:var(--teal);color:#fff;border:none;border-radius:6px;padding:9px 16px;font-size:14px;cursor:pointer;font-weight:600}
+  .btn:hover{filter:brightness(1.07)}
+  .btn.secondary{background:#fff;color:var(--navy);border:1px solid var(--navy)}
+  .btn.ghost{background:#fff;color:var(--muted);border:1px solid var(--line);font-weight:500}
+  .btn.danger{background:#fff;color:var(--bad);border:1px solid var(--bad);font-weight:500}
+  .btn.small{padding:5px 10px;font-size:12.5px}
+  input[type=text],input[type=date],input[type=number],input[type=tel],input[type=email],input[type=time],select,textarea{
+    width:100%;padding:7px 9px;border:1px solid var(--line);border-radius:6px;font-size:14px;font-family:inherit;background:#fff;color:var(--text)}
+  input:focus,select:focus,textarea:focus{outline:2px solid var(--teal);outline-offset:0;border-color:var(--teal)}
+  textarea{min-height:56px;resize:vertical}
+  label.f{display:block;font-size:12.5px;font-weight:600;color:var(--muted);margin-bottom:3px}
+  .grid{display:grid;gap:12px 16px}
+  .grid.c2{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+  .grid.c3{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+  .grid.c4{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+  table{border-collapse:collapse;width:100%;font-size:13.5px}
+  th{background:var(--navy);color:#fff;text-align:left;padding:8px 10px;font-weight:600;font-size:12.5px;white-space:nowrap}
+  td{border-bottom:1px solid var(--line);padding:7px 10px;vertical-align:top}
+  .chip{display:inline-block;background:var(--chip);border-radius:20px;padding:2px 10px;font-size:11.5px;font-weight:600;color:var(--muted);margin:1px 2px}
+  .chip.ok{background:#dcefe2;color:var(--ok)}
+  .chip.warn{background:#fdf0dd;color:var(--warn)}
+  .chip.info{background:var(--teal-light);color:var(--teal)}
+  .chip.bad{background:#fbe4e2;color:var(--bad)}
+  .tabs{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:14px}
+  .tabs button{background:#fff;border:1px solid var(--line);border-bottom:3px solid transparent;border-radius:8px 8px 0 0;padding:8px 12px;font-size:13px;cursor:pointer;color:var(--muted);font-weight:600}
+  .tabs button.active{color:var(--navy);border-bottom-color:var(--teal);background:var(--card)}
+  .tabs button .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--line);margin-left:6px}
+  .tabs button .dot.done{background:var(--ok)}
+  .savebar{position:fixed;bottom:0;left:0;right:0;background:var(--navy-dark);color:#fff;padding:8px 22px;display:flex;gap:14px;align-items:center;font-size:13px;z-index:50}
+  .savebar .status{opacity:.85}
+  .domain{border:1px solid var(--line);border-radius:8px;padding:12px 14px;margin-bottom:12px;background:#fbfcfe}
+  .domain .dhead{font-size:14.5px;font-weight:700;color:var(--navy);margin-bottom:8px}
+  .qrow{display:grid;grid-template-columns:minmax(240px,46%) 1fr;gap:10px;border-bottom:1px dashed var(--line);padding:7px 0;align-items:center}
+  .qrow:last-of-type{border-bottom:none}
+  .qrow .ql{font-size:13px;color:var(--text)}
+  @media(max-width:680px){.qrow{grid-template-columns:1fr}}
+  .sumrow{background:var(--teal-light);border-radius:8px;padding:9px 12px;margin-top:10px;display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px 14px}
+  .sumrow label.f{color:var(--teal)}
+  .checks{display:flex;flex-wrap:wrap;gap:6px}
+  .checks label{display:flex;gap:6px;align-items:center;border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-size:12.5px;cursor:pointer;background:#fff}
+  .checks label:has(input:checked){border-color:var(--teal);background:var(--teal-light);font-weight:600}
+  .checks input{width:15px;height:15px;accent-color:var(--teal)}
+  .banner{background:#fff8e6;border:1px solid #eed9a0;border-radius:8px;padding:10px 14px;font-size:13px;color:#6b5310;margin-bottom:14px}
+  .alert{background:#fdecea;border:1px solid #f2b8b5;border-radius:8px;padding:10px 14px;font-size:13px;color:#8c1d18;margin-bottom:12px}
+  .kv{display:grid;grid-template-columns:minmax(220px,330px) 1fr;gap:4px 14px;font-size:13.5px}
+  .kv .k{color:var(--muted)}
+  .kv .v{font-weight:600}
+  .qrbox{text-align:center;padding:10px}
+  .qrbox img{width:260px;height:260px;image-rendering:pixelated;border:1px solid var(--line);border-radius:8px;background:#fff;padding:10px}
+  .linkline{font-family:Consolas,monospace;font-size:13px;background:var(--chip);padding:8px 12px;border-radius:6px;word-break:break-all;margin:10px 0}
+  .empty{color:var(--muted);font-size:13.5px;font-style:italic;padding:14px 4px}
+  .reprow{border:1px solid var(--line);border-radius:8px;padding:12px;margin-bottom:10px;background:#fbfcfe;position:relative}
+  .reprow .del{position:absolute;top:8px;right:8px}
+  .summary-ok{color:var(--ok);font-weight:700}
+  .summary-no{color:var(--muted)}
+  @media print{
+    header.app,.savebar,.tabs,.toolbar,.no-print,button{display:none !important}
+    body{background:#fff;font-size:11px}
+    main{max-width:none;padding:0}
+    .card{border:none;padding:6px 0;margin:0 0 8px;break-inside:avoid}
+    section.part{display:block !important}
+    input,select,textarea{border:none;border-bottom:1px solid #999;border-radius:0;padding:2px 4px}
+    .print-only{display:block !important}
+  }
+  .print-only{display:none}
+</style>
+</head>
+<body>
+
+<header class="app">
+  <div>
+    <div class="brand">SDOH Assessment Tool</div>
+    <div class="sub">AACCAA &middot; FY27 Healthy Families &amp; Community Wellness Initiative &middot; Participant Assessment, Referral, Follow-Up and Exit</div>
+  </div>
+  <div class="spacer"></div>
+  <button id="navCases" class="active" onclick="showView('home')">Cases</button>
+  <button id="navShare" onclick="showView('share')">Link &amp; QR</button>
+</header>
+
+<!-- ============================ HOME ============================ -->
+<main id="viewHome">
+  <div class="banner no-print">
+    <b>Confidentiality:</b> this record is part of the authorized program record. Data is saved automatically on this
+    computer and — once the backup folder is connected below — written to the program's SharePoint folder on every save.
+    Use the <b>Export</b> buttons to move data into the SDOH Assessment Responses workbook and the FY27 PM Tracker.
+  </div>
+  <div id="backupBanner" class="alert no-print" hidden></div>
+  <div class="toolbar">
+    <button class="btn" onclick="newCase()">+ New Assessment</button>
+    <button class="btn secondary" id="backupBtn" onclick="connectBackupFolder()">Connect SharePoint backup folder…</button>
+    <button class="btn secondary" onclick="document.getElementById('fileLoad').click()">Load case file…</button>
+    <input type="file" id="fileLoad" accept=".json" style="display:none" onchange="loadCaseFile(event)">
+    <input type="text" id="searchBox" placeholder="Search ID, name, navigator…" style="max-width:260px" oninput="renderHome()">
+  </div>
+  <div class="card">
+    <h2>Assessments</h2>
+    <p class="hint">Open a case to continue where you left off. Chips update as each part of the packet is completed.</p>
+    <div id="caseTableWrap"></div>
+  </div>
+  <div class="card no-print">
+    <h2>Export for SharePoint</h2>
+    <p class="hint">Each export covers <b>all cases</b> on this computer and matches a sheet of
+      <b>SDOH_Assessment_Responses_FY27.xlsx</b> one-for-one. The PM Tracker export matches the Participants
+      sheet of the FY27 PM Tracker column-for-column.</p>
+    <div class="toolbar" style="margin:0">
+      <button class="btn" onclick="exportPMTracker()">PM Tracker rows</button>
+      <button class="btn secondary" onclick="exportResponses()">Assessment Responses</button>
+      <button class="btn secondary" onclick="exportDomainDetail()">Domain Detail</button>
+      <button class="btn secondary" onclick="exportReferrals()">Referrals</button>
+      <button class="btn secondary" onclick="exportFollowUps()">Follow-Ups</button>
+      <button class="btn secondary" onclick="exportServicePlan()">Service Plan</button>
+      <button class="btn secondary" onclick="exportAddlInfo()">Additional Info</button>
+      <button class="btn ghost" onclick="exportAllCasesJSON()">Backup all cases (JSON)</button>
+    </div>
+  </div>
+</main>
+
+<!-- ============================ CASE ============================ -->
+<main id="viewCase" hidden>
+  <div class="toolbar">
+    <button class="btn ghost" onclick="showView('home')">&larr; All cases</button>
+    <span id="caseTitle" style="font-weight:700;color:var(--navy);font-size:16px"></span>
+    <div class="spacer" style="flex:1"></div>
+    <button class="btn secondary small" onclick="exportCaseJSON()">Save case file</button>
+    <button class="btn secondary small" onclick="exportPMTracker(currentId)">Export PM row</button>
+    <button class="btn ghost small" onclick="printPacket()">Print packet</button>
+    <button class="btn ghost small" onclick="archiveCase()">Archive off this computer</button>
+    <button class="btn danger small" onclick="deleteCase()">Delete</button>
+  </div>
+
+  <div class="tabs" id="tabBar"></div>
+  <div class="print-only card"><h2>FY27 SDOH Participant Assessment, Referral, Follow-Up and Exit Tool — AACCAA</h2><p class="hint" id="printMeta"></p></div>
+
+  <section class="part" id="part1"></section>
+  <section class="part" id="partT" hidden></section>
+  <section class="part" id="part2" hidden></section>
+  <section class="part" id="part3" hidden></section>
+  <section class="part" id="part4" hidden></section>
+  <section class="part" id="part5" hidden></section>
+  <section class="part" id="part6" hidden></section>
+  <section class="part" id="part7" hidden></section>
+  <section class="part" id="partS" hidden></section>
+</main>
+
+<!-- ============================ SHARE ============================ -->
+<main id="viewShare" hidden>
+  <div class="card">
+    <h2>Share the SDOH Assessment Tool</h2>
+    <p class="hint">Give navigators this link, or let partners scan the QR code. The tool runs entirely in the browser and works offline once saved to a laptop.</p>
+    <div class="qrbox">
+      <!--QR_IMG_START--><img alt="QR code for the SDOH Assessment Tool" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAhwAAAIcCAIAAAAynOArAAAL+UlEQVR4nO3cwXEjNxRFUdPFQJyHk3FoTsZ5OJP2WlpMoTx30B/NcwJQQ2RLt7B5r+u6fgOAwu93HwCA5xAVADKiAkBGVADIiAoAGVEBICMqAGREBYCMqACQERUAMqICQEZUAMiICgAZUQEgIyoAZEQFgIyoAJARFQAyogJARlQAyIgKABlRASAjKgBkRAWAjKgAkBEVADKiAkBGVADIiAoAGVEBICMqAGREBYCMqACQERUAMqICQEZUAMiICgAZUQEgIyoAZEQFgIyoAJARFQAyogJARlQAyIgKABlRASAjKgBk3ncf4Ls//vzr7iPc5t9//r77CF/4Ln5s5fOZ9p1Wqnej+ny8q3O4qQCQERUAMqICQEZUAMiICgAZUQEgIyoAZEQFgIyoAJARFQAyogJAZtz214ppWzcrpm0TTTtPZdq7sXMja+ezdm52Vc+a9m6sOPHv1E0FgIyoAJARFQAyogJARlQAyIgKABlRASAjKgBkRAWAjKgAkBEVADJHbn+t2LmZs3NTqNpKOnG7qbLzM5z2HlbnmfYeVqZ9XydyUwEgIyoAZEQFgIyoAJARFQAyogJARlQAyIgKABlRASAjKgBkRAWAzGO3v57qqXtT07bIdp555wbUtH2wFU/dyHoqNxUAMqICQEZUAMiICgAZUQEgIyoAZEQFgIyoAJARFQAyogJARlQAyNj+OszOPaWVZ+3ciVo58849rmk7Yzv3yirTzsPPc1MBICMqAGREBYCMqACQERUAMqICQEZUAMiICgAZUQEgIyoAZEQFgMxjt78+eVPoxP2rnaq9sp1O/JxPfH+mfYYnclMBICMqAGREBYCMqACQERUAMqICQEZUAMiICgAZUQEgIyoAZEQFgMyR218nbjdNM21zqTrPJ/+cFdPOs9OJZz6RmwoAGVEBICMqAGREBYCMqACQERUAMqICQEZUAMiICgAZUQEgIyoAZF7Xdd19BmI7N46m7URVe2U7t9Gqz+fErTaex00FgIyoAJARFQAyogJARlQAyIgKABlRASAjKgBkRAWAjKgAkBEVADLvuw/wf0zbZar2r3buaJ34rJ1bUieeeUV15mnvvPd5DjcVADKiAkBGVADIiAoAGVEBICMqAGREBYCMqACQERUAMqICQEZUAMi8ruu6+wxfVPs8O+3cGVth92zOs1ac+P6c+PmsmPY3eCI3FQAyogJARlQAyIgKABlRASAjKgBkRAWAjKgAkBEVADKiAkBGVADIHLn9tXNvasW0vbJp200rpn0X087Djz11g+5EbioAZEQFgIyoAJARFQAyogJARlQAyIgKABlRASAjKgBkRAWAjKgAkHnffYDvTtytWrFzS+rE/TR+bOf7M23/auff+87P56l/X24qAGREBYCMqACQERUAMqICQEZUAMiICgAZUQEgIyoAZEQFgIyoAJB5Xdd19xm+2Lnzs3NX56k7P9N2xqbtwp24ozXtPTzxf8KJZ664qQCQERUAMqICQEZUAMiICgAZUQEgIyoAZEQFgIyoAJARFQAyogJAZtz214oT951WPHX/qjJt42ianbteJ+6VTTtz9axp3FQAyIgKABlRASAjKgBkRAWAjKgAkBEVADKiAkBGVADIiAoAGVEBIPO++wB3mraDVJm2F/TU7aZP3mE7UfV9ffKu1wo3FQAyogJARlQAyIgKABlRASAjKgBkRAWAjKgAkBEVADKiAkBGVADIHLn9tXNzyc7PHNO2tnbug+3crare1Wk/Z+ezdv7/mfa/xU0FgIyoAJARFQAyogJARlQAyIgKABlRASAjKgBkRAWAjKgAkBEVADKv67ruPsNtdu7q7NwQm7ZXtnOPa+eZp20urfDOz3nWihPfMTcVADKiAkBGVADIiAoAGVEBICMqAGREBYCMqACQERUAMqICQEZUAMi87z7Ad0/dXJq2X7TiqXtKK6Z9hiueeuZpe2Un/v/ZyU0FgIyoAJARFQAyogJARlQAyIgKABlRASAjKgBkRAWAjKgAkBEVADKv67ruPsMvMW0vaMUn7xdVZz7xe5/mxPdw2t/gJ3NTASAjKgBkRAWAjKgAkBEVADKiAkBGVADIiAoAGVEBICMqAGREBYDM++4DfDdtw+ep56metXMr6cR9sOo8056187s40bT/Gzu5qQCQERUAMqICQEZUAMiICgAZUQEgIyoAZEQFgIyoAJARFQAyogJA5nVd191nuM203aGdu1Un7k1N2/Wa9v5Upu1NnbijNW03byc3FQAyogJARlQAyIgKABlRASAjKgBkRAWAjKgAkBEVADKiAkBGVADIvO8+wK/y1L2pFSduJVV2bpGtmPa9T9s9WznPUz/Dp3JTASAjKgBkRAWAjKgAkBEVADKiAkBGVADIiAoAGVEBICMqAGREBYDM67quu88wWrUFtPPnrHjqptm0basVTz3zzvOsmPY5P3VDzE0FgIyoAJARFQAyogJARlQAyIgKABlRASAjKgBkRAWAjKgAkBEVADLjtr9O3Miq2Bk761k7TduJmvaurjjxWdP291a4qQCQERUAMqICQEZUAMiICgAZUQEgIyoAZEQFgIyoAJARFQAyogJA5n33AX6Valdn2o7Wimn7YNN2vabtuVU/Z+fns/Odn7bVNu0807ipAJARFQAyogJARlQAyIgKABlRASAjKgBkRAWAjKgAkBEVADKiAkDmdV3X3Wf4YtpG1oppe1MrTjxzZdqOVmXneZ76dzrNiX+DbioAZEQFgIyoAJARFQAyogJARlQAyIgKABlRASAjKgBkRAWAjKgAkBm3/VWpdn5O3B06cS9o2m7Vzu2vp74bT/29+DE3FQAyogJARlQAyIgKABlRASAjKgBkRAWAjKgAkBEVADKiAkBGVADIPHb7a8XOvakV0zapVpy4sTZtJ+rE732aaZ/hJ38XbioAZEQFgIyoAJARFQAyogJARlQAyIgKABlRASAjKgBkRAWAjKgAkHnffYDvqi2pFdN2vaqfM22bqDrPJz9rxbQtqZ2/+4pp53kqNxUAMqICQEZUAMiICgAZUQEgIyoAZEQFgIyoAJARFQAyogJARlQAyIzb/pq2X1Spfq+d+0U798FWnPhu7NwH2/l9nbhBt2LlPNPOPI2bCgAZUQEgIyoAZEQFgIyoAJARFQAyogJARlQAyIgKABlRASAjKgBkxm1/7dy2mmZlL2japtCJe1Mrdm52Tdu2WvHJ7+GKaefZyU0FgIyoAJARFQAyogJARlQAyIgKABlRASAjKgBkRAWAjKgAkBEVADLjtr9WnLiZs3PTbOezdm5tVXbuelWeutlVOfH9eep36qYCQEZUAMiICgAZUQEgIyoAZEQFgIyoAJARFQAyogJARlQAyIgKAJkjt79WnLh/tWLnXlD1rGkbRyvnqT6fEzeppm1J2WE7i5sKABlRASAjKgBkRAWAjKgAkBEVADKiAkBGVADIiAoAGVEBICMqAGRe13XdfYYvdu4yVU7cXJq2p1TZuQ+2k3f+55+14qnn2clNBYCMqACQERUAMqICQEZUAMiICgAZUQEgIyoAZEQFgIyoAJARFQAy77sPwNmmbVKt2LnLNO13X3Hi3tROJ36nO7mpAJARFQAyogJARlQAyIgKABlRASAjKgBkRAWAjKgAkBEVADKiAkDmsdtfT90vWtkdWvndd34+O5+1c9er+jknbklV7+HOZ9l828NNBYCMqACQERUAMqICQEZUAMiICgAZUQEgIyoAZEQFgIyoAJARFQAyr+u67j7DF5+8mXPiXtm0PaVpu0wnblJNew+nfT7TTPu+3FQAyIgKABlRASAjKgBkRAWAjKgAkBEVADKiAkBGVADIiAoAGVEBIDNu+wuAc7mpAJARFQAyogJARlQAyIgKABlRASAjKgBkRAWAjKgAkBEVADKiAkBGVADIiAoAGVEBICMqAGREBYCMqACQERUAMqICQEZUAMiICgAZUQEgIyoAZEQFgIyoAJARFQAyogJARlQAyIgKABlRASAjKgBkRAWAjKgAkBEVADKiAkBGVADIiAoAGVEBICMqAGREBYCMqACQERUAMqICQEZUAMiICgAZUQEgIyoAZP4DqGDNdvvx3xoAAAAASUVORK5CYII=" id="qrImg"><!--QR_IMG_END-->
+      <div class="linkline" id="toolUrlLine"></div>
+      <button class="btn secondary" onclick="copyLink()">Copy link</button>
+    </div>
+    <h3>Updating the link or QR code</h3>
+    <p class="hint">When the final hosted location is confirmed, run
+      <code>python generate_qr.py "https://your-final-url"</code> in the <code>sdoh-assessment-tool</code> folder —
+      it regenerates the QR image, the printable flyer, and updates this page in one step.</p>
+  </div>
+</main>
+
+<div class="savebar no-print">
+  <span>AACCAA SDOH Assessment Tool</span>
+  <span class="status" id="saveStatus">Ready</span>
+  <span class="status" id="backupStatus"></span>
+  <div class="spacer" style="flex:1"></div>
+  <span class="status" id="caseCount"></span>
+</div>
+
+<script>
+'use strict';
+/* =====================================================================
+   SDOH Assessment Tool — AACCAA FY27
+   Single-file offline intake application.
+   Field content mirrors the "FY27 Social Determinants of Health —
+   Participant Assessment, Referral, Follow-Up and Exit Tool" (v1.2, July
+   2026) and the FY27 Performance Measure Data Dictionary.
+   ===================================================================== */
+
+// The URL the QR code and share page point at. generate_qr.py rewrites this line.
+const TOOL_URL = "https://hatchjoshua137-jpg.github.io/aaccaa-sdoh-intake/"; /*TOOL_URL*/
+
+const STORE_KEY = 'aaccaa_sdoh_cases_v2';
+const ID_PREFIX = 'AACCAA-27-';
+
+/* ---------- FY27 PM Tracker → Participants sheet: exact 46-column header ---------- */
+const PM_HEADERS = ["Participant ID","Enrollment Date","Enrollment Month","Navigator","Program Site","ZIP Code","Residency Verified","Age 18+","Household Size","Income Status","Target Pop Basis","Consent (Y/N)","Enrolled (Y/N)","Assessment Completed (Y/N)","Assessment Date","Referral Made (Y/N)","# Referrals Initiated","Referral Completed (Y/N)","# Referrals Completed","Verification Source","Follow-Up Completed (Y/N)","# Follow-Up Contacts","Exit Survey Completed (Y/N)","Exit Date","Closure Reason","DS Housing (Y/N)","DS Food (Y/N)","DS Transport (Y/N)","DS Primary Care (Y/N)","DS Job (Y/N)","DS Violence Prevention (Y/N)","DS Education (Y/N)","OB Enrolled (Y/N)","OB Enroll Date","OB Reduced Calories (Y/N)","OB Increased Activity (Y/N)","OB Decreased BMI (Y/N)","OB Maintain 60d (Y/N)","OB Maintain 90d (Y/N)","OB Maintain 180d (Y/N)","Baseline Weight (lb)","Baseline BMI","60d BMI","90d BMI","180d BMI","Notes"];
+window.PM_HEADERS = PM_HEADERS;
+
+/* ---------- Shared option sets (packet response coding) ---------- */
+const YND    = ['','Yes','No','Declined'];
+const YNND   = ['','Yes','No','Not sure','Declined'];
+const YNNS   = ['','Yes','No','Not sure'];
+const YNM    = ['','Yes','No','Maybe later'];
+const PRIORITY = ['','Immediate/same day','Within 48 hours','Routine within 7 days','Monitor only'];
+const VERIFICATION = ['','Participant report','Partner confirmation','System/document record','Other'];
+const REFERRAL_STATUSES = ['Referral initiated','Participant contacted','Appointment/service scheduled',
+  'Service received/completed','Waitlisted/pending','Ineligible','Unable to contact','Participant declined',
+  'Alternative referral provided','Need resolved without referral'];
+const CONTACT_METHODS = ['Phone','Text','In person','Virtual'];
+const EXIT_STATUS = ['','Not identified','Resolved','Improved','Unchanged','Worsened'];
+const AGREE = ['','Strongly agree','Agree','Disagree','Strongly disagree'];
+const CLOSURE_REASONS = ['','Goals met','Participant chose to exit','Unable to contact','Moved/out of area',
+  'Referred to ongoing case management','Other'];
+
+/* ---------- Part 2: the 14 SDOH domains — verbatim from the packet ---------- */
+const DOMAINS = [
+  {n:1, key:'d01', short:'Housing', name:'1. Housing stability and housing quality', qs:[
+    {k:'stay', l:'Where are you staying most nights?', t:'select', o:['','Own/rent','With others','Temporary','Shelter','Unsheltered']},
+    {k:'worried', l:'Are you worried that you may lose your housing within the next two months?', t:'select', o:YNND},
+    {k:'moved', l:'During the past 12 months, have you moved two or more times because you could not remain where you were?', t:'select', o:YND},
+    {k:'pastdue', l:'Do you currently have a past-due rent or mortgage, eviction notice, foreclosure notice or landlord dispute?', t:'select', o:YNND},
+    {k:'conditions', l:'Are any housing conditions affecting health or safety?', t:'multi', o:['Pests','Mold','No heat','No water','Crowding','Other']},
+    {k:'help', l:'What housing help would be most useful now?', t:'text'},
+  ]},
+  {n:2, key:'d02', short:'Food', name:'2. Food security and nutrition access', qs:[
+    {k:'worried', l:'During the past 30 days, how often were you worried that food would run out before you had money to buy more?', t:'select', o:['','Never','Sometimes','Often','Declined']},
+    {k:'notlast', l:'During the past 30 days, how often did the food you purchased not last?', t:'select', o:['','Never','Sometimes','Often','Declined']},
+    {k:'skip', l:'Did anyone in the household skip meals or eat less because there was not enough money for food?', t:'select', o:YND},
+    {k:'reliable', l:'Do you have reliable access to food that supports your health needs?', t:'select', o:['','Yes','No','Partly','Declined']},
+    {k:'benefits', l:'Current food benefits or resources', t:'multi', o:['SNAP','WIC','Pantry','Meals','None','Other']},
+    {k:'help', l:'What food or nutrition help would be most useful now?', t:'text'},
+  ]},
+  {n:3, key:'d03', short:'Utilities', name:'3. Utilities and essential household services', qs:[
+    {k:'shutoff', l:'During the past 12 months, did you receive a shutoff notice for electricity, gas, water or another essential utility?', t:'select', o:YND},
+    {k:'disconnected', l:'Is any essential utility currently disconnected or unavailable?', t:'select', o:YND},
+    {k:'reduce', l:'Are utility costs causing you to reduce spending on food, medicine, transportation or other necessities?', t:'select', o:YND},
+    {k:'energy', l:'Do you need energy-assistance or weatherization support?', t:'select', o:YNNS},
+  ]},
+  {n:4, key:'d04', short:'Transportation', name:'4. Transportation access', qs:[
+    {k:'prevented', l:'During the past 12 months, did transportation problems prevent or delay medical care, work, school, food access or another essential activity?', t:'select', o:YND},
+    {k:'affected', l:'Which transportation needs are affected?', t:'multi', o:['Medical','Food','Work','School','Benefits','Other']},
+    {k:'usual', l:'What transportation do you usually use?', t:'multi', o:['Own vehicle','Family/friend','Bus','Rideshare/taxi','Walk','None']},
+    {k:'unreliable', l:'Do cost, disability, scheduling, distance or safety make transportation unreliable?', t:'select', o:YND},
+    {k:'help', l:'What transportation help would be most useful now?', t:'text'},
+  ]},
+  {n:5, key:'d05', short:'Healthcare', name:'5. Healthcare access and health navigation', qs:[
+    {k:'insurance', l:'Do you currently have health insurance?', t:'select', o:YNND},
+    {k:'provider', l:'Do you have a regular primary-care provider or clinic?', t:'select', o:YNND},
+    {k:'unmet', l:'During the past 12 months, did you need medical, dental, vision, behavioral-health or prescription care that you could not obtain?', t:'select', o:YND},
+    {k:'prevented', l:'What prevented care?', t:'multi', o:['Cost','Transportation','Appointment','Childcare','Language','Other']},
+    {k:'applyhelp', l:'Do you need help applying for insurance, selecting a provider or scheduling an appointment?', t:'select', o:YNNS},
+    {k:'rx', l:'Do you currently lack an essential prescription or medical supply?', t:'select', o:YND},
+    {k:'behavioral', l:'Would you like support for stress, emotional health, substance use or another behavioral-health concern?', t:'select', o:['','Yes','No','Maybe later','Declined']},
+    {k:'goal', l:'Healthcare goal or requested support', t:'text'},
+  ]},
+  {n:6, key:'d06', short:'Disability-Caregiving', name:'6. Disability, functional access and caregiving', qs:[
+    {k:'condition', l:'Does a physical, sensory, cognitive or behavioral-health condition make daily activities or service access difficult?', t:'select', o:YND},
+    {k:'accommodation', l:'Do you need an accommodation, assistive device or communication support?', t:'select', o:YNNS},
+    {k:'caregiver', l:'Are you providing unpaid care for a child, older adult or person with a disability?', t:'select', o:YND},
+    {k:'burden', l:'Does caregiving make it difficult to attend appointments, work, shop for food or care for your own health?', t:'select', o:YND},
+  ]},
+  {n:7, key:'d07', short:'Employment', name:'7. Employment and job opportunity', qs:[
+    {k:'status', l:'Current employment status', t:'select', o:['','Full-time','Part-time','Temporary','Unemployed','Unable to work','Retired']},
+    {k:'seeking', l:'Are you seeking a job, more hours, a better job or training?', t:'select', o:['','Yes','No','Not now','Declined']},
+    {k:'barriers', l:'Which barriers are affecting employment?', t:'multi', o:['Transportation','Childcare','Skills','Credentials','Record','Health','Other']},
+    {k:'assist', l:'Do you need resume, application, interview, digital-skills, training or placement assistance?', t:'select', o:YNNS},
+    {k:'goal', l:'Employment goal', t:'text'},
+  ]},
+  {n:8, key:'d08', short:'Education', name:'8. Education and training', qs:[
+    {k:'level', l:'Highest level completed', t:'select', o:['','Less than high school','Diploma/GED','Some college','Degree','Other']},
+    {k:'help', l:'Would you like help with GED, adult education, literacy, English-language learning, college or occupational training?', t:'select', o:YNM},
+    {k:'barriers', l:'Are cost, transportation, technology, childcare or scheduling barriers to education or training?', t:'select', o:YND},
+    {k:'goal', l:'Education/training goal', t:'text'},
+  ]},
+  {n:9, key:'d09', short:'Financial', name:'9. Financial strain and benefits', qs:[
+    {k:'difficulty', l:'How difficult is it to pay for basic needs such as food, housing, utilities, medicine and transportation?', t:'select', o:['','Not difficult','Somewhat difficult','Very difficult','Declined']},
+    {k:'behind', l:'Are you currently behind on essential bills or debt payments?', t:'select', o:YND},
+    {k:'screening', l:'Would you like a benefits screening or help applying for available assistance?', t:'select', o:YNNS},
+    {k:'supports', l:'Which supports may be needed?', t:'multi', o:['SNAP/WIC','Energy','Cash assistance','Tax credit','Insurance','Other']},
+    {k:'goal', l:'Financial goal or urgent expense', t:'text'},
+  ]},
+  {n:10, key:'d10', short:'Digital', name:'10. Digital access', qs:[
+    {k:'phone', l:'Do you have reliable access to a working phone?', t:'select', o:['','Yes','No','Limited']},
+    {k:'internet', l:'Do you have reliable internet access and a device for online applications or telehealth?', t:'select', o:['','Yes','No','Limited']},
+    {k:'skills', l:'Do you need help using email, portals, online applications or video appointments?', t:'select', o:YNNS},
+  ]},
+  {n:11, key:'d11', short:'Social Support', name:'11. Social support, isolation and family stability', qs:[
+    {k:'support', l:'Do you have at least one person you can contact for practical or emotional support?', t:'select', o:['','Yes','No','Sometimes','Declined']},
+    {k:'isolated', l:'How often do you feel isolated or alone?', t:'select', o:['','Never','Sometimes','Often','Declined']},
+    {k:'conflict', l:'Are family conflict, childcare, caregiving or relationship stress affecting your health or ability to meet goals?', t:'select', o:YND},
+    {k:'connect', l:'Would you like connection to a support group, community activity, family service or faith/community resource?', t:'select', o:YNM},
+  ]},
+  {n:12, key:'d12', short:'Safety', name:'12. Personal and community safety',
+   privacy:'Privacy instruction: ask these questions privately whenever possible. Do not require the participant to answer in front of a partner, family member or other person who may affect safety.', qs:[
+    {k:'safe', l:'Do you feel safe where you live?', t:'select', o:['','Yes','No','Sometimes','Declined']},
+    {k:'hurting', l:'Is anyone currently hurting, threatening, stalking, controlling or preventing you from accessing money, transportation, healthcare or support?', t:'select', o:YND},
+    {k:'violence', l:'Are violence, neighborhood conditions or harassment limiting daily activities?', t:'select', o:YND},
+    {k:'referral', l:'Would you like confidential information or a referral related to safety?', t:'select', o:YNM},
+  ]},
+  {n:13, key:'d13', short:'Legal-ID', name:'13. Legal, identification and documentation barriers', qs:[
+    {k:'documents', l:'Do you need identification documents, birth records, Social Security documents or other records to access services?', t:'select', o:YNNS},
+    {k:'legal', l:'Is a legal, benefits, immigration, child-support, custody, record-related or administrative issue affecting your health or stability?', t:'select', o:YND},
+    {k:'referral', l:'Would you like referral information for an appropriate legal or advocacy resource?', t:'select', o:YNM},
+  ]},
+  {n:14, key:'d14', short:'Other', name:'14. Other participant-identified needs', qs:[
+    {k:'other', l:'Other needs identified by the participant', t:'textarea'},
+  ]},
+];
+
+/* ---------- Health behavior sections 15–16 (packet wording) ---------- */
+const HB15 = [
+  {k:'fruitveg', l:'On a typical day, how many servings of fruits and vegetables do you eat?', t:'select', o:['','0-1','2-3','4-5','6 or more','Not sure']},
+  {k:'sugary', l:'How often do you drink soda, sweet tea, energy drinks or other sugar-sweetened beverages?', t:'select', o:['','Never','Less than daily','1/day','2+/day']},
+  {k:'difficulty', l:'How often do cost, transportation, cooking equipment, time or food availability make healthy eating difficult?', t:'select', o:['','Never','Sometimes','Often']},
+  {k:'wants', l:'Would you like nutrition education, cooking demonstrations, food-benefit support or healthy-food resources?', t:'select', o:YNM},
+  {k:'goal', l:'Participant nutrition goal', t:'text'},
+];
+const HB16 = [
+  {k:'days', l:'During a typical week, on how many days do you do moderate physical activity such as brisk walking?', t:'select', o:['','0','1','2','3','4','5','6','7']},
+  {k:'minutes', l:'On an active day, about how many minutes are you active?', t:'select', o:['','Under 10','10-29','30-59','60 or more']},
+  {k:'estweek', l:'Estimated moderate-activity minutes per week', t:'number'},
+  {k:'limits', l:'What limits physical activity?', t:'multi', o:['Health','Safety','Cost','Transportation','Time','Childcare','Other']},
+  {k:'wants', l:'Would you like walking groups, fitness sessions or wellness coaching?', t:'select', o:YNM},
+  {k:'goal', l:'Participant activity goal', t:'text'},
+];
+
+const TRIAGE_QS = [
+  {k:'t1', l:'Does the participant have a safe place to stay tonight?', o:YNND},
+  {k:'t2', l:'Does the household have food for today and tomorrow?', o:YNND},
+  {k:'t3', l:'Are heat, electricity and water currently available?', o:['','Yes','No','Partial','Declined']},
+  {k:'t4', l:'Is urgent medical care or essential medication needed today?', o:YNND},
+  {k:'t5', l:'Is transportation needed for urgent medical care, food or shelter?', o:YNND},
+  {k:'t6', l:'Does the participant feel in immediate danger from another person?', o:YNND},
+  {k:'t7', l:'Is a child, vulnerable adult or dependent person potentially unsafe?', o:YNND},
+];
+
+const DIRECT_SERVICES = [
+  {key:'housing', label:'Housing'}, {key:'food', label:'Food'}, {key:'transport', label:'Transportation'},
+  {key:'primary', label:'Primary care'}, {key:'job', label:'Job'}, {key:'violence', label:'Violence prevention'},
+  {key:'education', label:'Education'},
+];
+const EXIT_DOMAINS = [
+  ['housing','Housing'],['food','Food'],['utilities','Utilities'],['transportation','Transportation'],
+  ['healthcare','Healthcare'],['employment','Employment'],['education','Education'],
+  ['income','Income/economic stability'],['social','Social support'],['safety','Safety'],
+  ['digital','Digital access'],['other','Other'],
+];
+const FINAL_REVIEW = [
+  'Enrollment eligibility, household size, income status and consent fields are complete.',
+  'All assessment domains have a documented response or decline.',
+  'Participant priorities and service plan are documented.',
+  'Each referral has a final or current status.',
+  'Referral completion is supported by an accepted verification source.',
+  'Follow-up contacts and attempts are distinguishable.',
+  'Direct-service categories are supported by service documentation.',
+  'Exit survey and case-closure reason are documented.',
+  'Required data were entered in the authorized program data system.',
+];
+
+/* ---------- Assessment Responses sheet: full-response export columns ----------
+   build_workbook.py parses this array from the file — it is the single source
+   of truth for the workbook's "Assessment Responses" sheet. ---------- */
+const RESP_HEADERS = [
+  "Participant ID","Assessment Date","Enrollment Month","Navigator","Program Site","Referral Source","Enrollment Method",
+  "Legal Name","Preferred Name","Date of Birth","Age","Home Address","City","ZIP Code","Phone","May Text","Email",
+  "Best Contact Method","Best Contact Days-Times","Preferred Language","Interpreter Needed","Accessibility Accommodation",
+  "County Resident Verified","Age 18+","Participant Group","Housing Arrangement","Household Size","AACCAA Involvement",
+  "Target Population Basis","Income Doc Status at Enrollment","Enrollment Determination","Determination By","Determination Date","Enrolled (Y/N)",
+  "Household Receives Income","Adults in Household","Children-Dependents","Household Total","Income Period From","Income Period To",
+  "Income Decreased Past 90 Days","Income Change Expected 60 Days","Total Gross Monthly Income","Total Annualized Income",
+  "Income Documentation Status","Verification Reviewed","Income Targeting Determination","Income Guideline Used",
+  "Race","Ethnicity","Gender Identity",
+  "Program Participation Consent","Consent Date","Contact Consent Methods",
+  "Triage Safe Place Tonight","Triage Food Today-Tomorrow","Triage Utilities Available","Triage Urgent Medical Need",
+  "Triage Transport Needed","Triage Immediate Danger","Triage Dependent Unsafe","Triage Emergency Services Contacted",
+  "Triage Safety Plan","Triage Continue Assessment",
+  "D01 Housing Positive Screen","D01 Housing Help Requested","D01 Housing Priority","D01 Housing Referral Needed",
+  "D02 Food Positive Screen","D02 Food Help Requested","D02 Food Priority","D02 Food Referral Needed",
+  "D03 Utilities Positive Screen","D03 Utilities Help Requested","D03 Utilities Priority","D03 Utilities Referral Needed",
+  "D04 Transportation Positive Screen","D04 Transportation Help Requested","D04 Transportation Priority","D04 Transportation Referral Needed",
+  "D05 Healthcare Positive Screen","D05 Healthcare Help Requested","D05 Healthcare Priority","D05 Healthcare Referral Needed",
+  "D06 Disability-Caregiving Positive Screen","D06 Disability-Caregiving Help Requested","D06 Disability-Caregiving Priority","D06 Disability-Caregiving Referral Needed",
+  "D07 Employment Positive Screen","D07 Employment Help Requested","D07 Employment Priority","D07 Employment Referral Needed",
+  "D08 Education Positive Screen","D08 Education Help Requested","D08 Education Priority","D08 Education Referral Needed",
+  "D09 Financial Positive Screen","D09 Financial Help Requested","D09 Financial Priority","D09 Financial Referral Needed",
+  "D10 Digital Positive Screen","D10 Digital Help Requested","D10 Digital Priority","D10 Digital Referral Needed",
+  "D11 Social Support Positive Screen","D11 Social Support Help Requested","D11 Social Support Priority","D11 Social Support Referral Needed",
+  "D12 Safety Positive Screen","D12 Safety Help Requested","D12 Safety Priority","D12 Safety Referral Needed",
+  "D13 Legal-ID Positive Screen","D13 Legal-ID Help Requested","D13 Legal-ID Priority","D13 Legal-ID Referral Needed",
+  "D14 Other Positive Screen","D14 Other Help Requested","D14 Other Priority","D14 Other Referral Needed",
+  "Assessment Completed (Y/N)",
+  "Fruit-Veg Servings Per Day","Sugary Drinks Frequency","Healthy Eating Difficulty","Wants Nutrition Support","Nutrition Goal",
+  "Activity Days Per Week","Active Minutes Per Day","Activity Minutes Per Week","Activity Limits","Wants Activity Support","Activity Goal",
+  "Measurement Consent","Measurement Date","Height (in)","Baseline Weight (lb)","Baseline BMI","BMI Category","Blood Pressure","Measurement Referral Indicated",
+  "Priority 1","Priority 2","Priority 3","Service Plan Agreed","Plan Copy Received",
+  "# Referrals Initiated","Referral Made (Y/N)","# Referrals Completed","Referral Completed (Y/N)","Verification Source",
+  "# Follow-Up Contacts","Follow-Up Completed (Y/N)","Latest Case Status",
+  "Exit Status Housing","Exit Status Food","Exit Status Utilities","Exit Status Transportation","Exit Status Healthcare",
+  "Exit Status Employment","Exit Status Education","Exit Status Income-Economic","Exit Status Social Support",
+  "Exit Status Safety","Exit Status Digital Access","Exit Status Other",
+  "Income At Exit","Income Change From Intake","Remains Connected To Support","Reason Referrals Not Completed",
+  "DS Housing (Y/N)","DS Food (Y/N)","DS Transport (Y/N)","DS Primary Care (Y/N)","DS Job (Y/N)","DS Violence Prevention (Y/N)","DS Education (Y/N)",
+  "Survey Understood Services","Survey Treated With Respect","Survey Accessed Resource","Survey More Confident",
+  "Overall Program Rating","Most Helpful","Should Improve","May Contact Later",
+  "Exit Survey Completed (Y/N)","Exit Date","Closure Reason","Follow-Up Measure Met","Exit Survey Measure Met","Referral Measure Met","Transition Plan",
+  "Navigator Final Review Complete",
+  "OB Enrolled (Y/N)","OB Enroll Date","OB Services Received","OB Nutrition Sessions","OB Activity Sessions","OB Coaching Contacts",
+  "60d Weight (lb)","60d BMI","90d Weight (lb)","90d BMI","180d Weight (lb)","180d BMI",
+  "OB Reduced Calories (Y/N)","OB Increased Activity (Y/N)","OB Decreased BMI (Y/N)","OB Maintain 60d (Y/N)","OB Maintain 90d (Y/N)","OB Maintain 180d (Y/N)",
+  "Notes"
+];
+window.RESP_HEADERS = RESP_HEADERS;
+
+const REF_HEADERS = ["Participant ID","Need / Domain","Provider / Service","Date Initiated","Status / Outcome","Completion Date","Verification","Consent Type","Consent Date","Notes"];
+const FU_HEADERS  = ["Participant ID","Contact Date","Method","Contact Type","Participant Reached","Connected With Provider","Received Referred Service","Verification Source","Barriers","New Or Changed Needs","Income Changed","Case Status After Contact","Meets Program Definition","Referral Completed?","Next Contact Date","Notes"];
+const SP_HEADERS  = ["Participant ID","Entry Type","Rank","Detail","Priority","Desired Outcome / Participant Action","Navigator-Partner Action","Target Date"];
+const DD_HEADERS  = ["Participant ID","Section","Question","Response"];
+const AI_HEADERS  = ["Participant ID","Item Needed","Source / Link","Date Requested","Due Date","Date Received","Status","Owner","Notes"];
+window.REF_HEADERS = REF_HEADERS; window.FU_HEADERS = FU_HEADERS; window.SP_HEADERS = SP_HEADERS;
+window.DD_HEADERS = DD_HEADERS; window.AI_HEADERS = AI_HEADERS;
+
+const AI_STATUSES = ['Open','Waiting on participant','Waiting on agency','Received','No longer needed'];
+
+/* =====================================================================
+   Data layer
+   ===================================================================== */
+let cases = {};
+let currentId = null;
+let activeTab = 'part1';
+let saveTimer = null;
+
+function loadStore(){
+  try{ cases = JSON.parse(localStorage.getItem(STORE_KEY) || '{}'); }
+  catch(e){ cases = {}; }
+}
+function persist(){
+  localStorage.setItem(STORE_KEY, JSON.stringify(cases));
+  setStatus('Saved ' + new Date().toLocaleTimeString());
+  updateCount();
+  backupToFolder();
+}
+
+/* =====================================================================
+   Automatic SharePoint backup (File System Access API)
+   The navigator connects the tool once to the OneDrive-synced SharePoint
+   folder; every save then writes the case files there and OneDrive uploads
+   them to SharePoint (version history preserved). No data leaves this
+   computer except to that folder.
+   ===================================================================== */
+const FSA_SUPPORTED = 'showDirectoryPicker' in window;
+let backupDir = null;          // FileSystemDirectoryHandle
+let backupState = 'off';       // off | ok | error | reconnect
+let lastBackupAt = null;
+let backupBusy = false, backupAgain = false;
+
+function idb(){
+  return new Promise((res, rej) => {
+    const rq = indexedDB.open('sdoh-backup', 1);
+    rq.onupgradeneeded = () => rq.result.createObjectStore('handles');
+    rq.onsuccess = () => res(rq.result);
+    rq.onerror = () => rej(rq.error);
+  });
+}
+async function idbSet(key, val){
+  const db = await idb();
+  return new Promise((res, rej) => {
+    const tx = db.transaction('handles','readwrite');
+    tx.objectStore('handles').put(val, key);
+    tx.oncomplete = res; tx.onerror = () => rej(tx.error);
+  });
+}
+async function idbGet(key){
+  const db = await idb();
+  return new Promise((res, rej) => {
+    const rq = db.transaction('handles').objectStore('handles').get(key);
+    rq.onsuccess = () => res(rq.result); rq.onerror = () => rej(rq.error);
+  });
+}
+
+async function connectBackupFolder(){
+  if(!FSA_SUPPORTED){
+    alert('This browser cannot connect a backup folder automatically. Use Microsoft Edge or Chrome, or back up manually with "Backup all cases (JSON)" into the SharePoint folder.');
+    return;
+  }
+  try{
+    backupDir = await showDirectoryPicker({mode:'readwrite', id:'sdoh-backup'});
+    await idbSet('dir', backupDir);
+    backupState = 'ok';
+    await backupToFolder(true);
+    renderBackupUI();
+  }catch(e){ /* user cancelled */ }
+}
+async function restoreBackupFolder(){
+  if(!FSA_SUPPORTED){ renderBackupUI(); return; }
+  try{
+    const h = await idbGet('dir');
+    if(!h){ renderBackupUI(); return; }
+    const perm = await h.queryPermission({mode:'readwrite'});
+    if(perm === 'granted'){ backupDir = h; backupState = 'ok'; backupToFolder(true); }
+    else { backupDir = h; backupState = 'reconnect'; }
+  }catch(e){ backupState = 'off'; }
+  renderBackupUI();
+}
+async function reconnectBackup(){
+  if(!backupDir) return connectBackupFolder();
+  try{
+    const perm = await backupDir.requestPermission({mode:'readwrite'});
+    if(perm === 'granted'){ backupState = 'ok'; await backupToFolder(true); }
+  }catch(e){ backupState = 'error'; }
+  renderBackupUI();
+}
+function safeName(s){ return (s||'unnamed').replace(/[^A-Za-z0-9._-]+/g,'_'); }
+async function writeFile(dir, name, content){
+  const fh = await dir.getFileHandle(name, {create:true});
+  const w = await fh.createWritable();
+  await w.write(content);
+  await w.close();
+}
+async function backupToFolder(force){
+  if(!backupDir || (backupState !== 'ok' && !force)) return;
+  if(backupBusy){ backupAgain = true; return; }
+  backupBusy = true;
+  try{
+    // One stable file per case: SharePoint/OneDrive version history keeps every prior save.
+    for(const [id, c] of Object.entries(cases)){
+      const name = `SDOH_case_${safeName(c.p1.pid || id)}.json`;
+      await writeFile(backupDir, name,
+        JSON.stringify({format:'aaccaa-sdoh-case', version:2, cases:{[id]:c}}, null, 2));
+    }
+    await writeFile(backupDir, '_all_cases_backup.json',
+      JSON.stringify({format:'aaccaa-sdoh-case', version:2, savedAt:new Date().toISOString(), cases}, null, 2));
+    backupState = 'ok';
+    lastBackupAt = new Date();
+  }catch(e){
+    backupState = (e && e.name === 'NotAllowedError') ? 'reconnect' : 'error';
+  }
+  backupBusy = false;
+  renderBackupUI();
+  if(backupAgain){ backupAgain = false; backupToFolder(); }
+}
+function renderBackupUI(){
+  const st = document.getElementById('backupStatus');
+  const banner = document.getElementById('backupBanner');
+  const btn = document.getElementById('backupBtn');
+  const hasCases = Object.keys(cases).length > 0;
+  if(!st) return;
+  if(backupState === 'ok'){
+    st.textContent = 'SharePoint backup ✓' + (lastBackupAt ? ' ' + lastBackupAt.toLocaleTimeString() : '');
+    banner.hidden = true;
+    if(btn) btn.textContent = 'Change backup folder…';
+  } else if(backupState === 'reconnect'){
+    st.textContent = 'SharePoint backup: click to reconnect';
+    banner.hidden = false;
+    banner.innerHTML = '<b>Backup paused.</b> The browser needs permission again after restarting. ' +
+      '<button class="btn small" onclick="reconnectBackup()">Reconnect backup folder</button>';
+  } else if(backupState === 'error'){
+    st.textContent = 'SharePoint backup FAILED — back up manually';
+    banner.hidden = false;
+    banner.innerHTML = '<b>Automatic backup failed.</b> Use "Backup all cases (JSON)" and save the file into the SharePoint folder, then ' +
+      '<button class="btn small" onclick="connectBackupFolder()">reconnect the folder</button>.';
+  } else {
+    st.textContent = FSA_SUPPORTED ? 'SharePoint backup: not connected' : '';
+    banner.hidden = !(hasCases && FSA_SUPPORTED);
+    if(!banner.hidden){
+      banner.innerHTML = '<b>Cases on this computer are not backed up to SharePoint yet.</b> ' +
+        'Click <b>Connect SharePoint backup folder…</b> and choose the program\'s synced SharePoint folder — ' +
+        'after that, every save is backed up automatically.';
+    }
+  }
+}
+function scheduleSave(){
+  setStatus('Saving…');
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(()=>{ if(currentId){ cases[currentId].updated = new Date().toISOString(); } persist(); if(currentId) refreshTabDots(); }, 400);
+}
+function setStatus(t){ document.getElementById('saveStatus').textContent = t; }
+function updateCount(){ document.getElementById('caseCount').textContent = Object.keys(cases).length + ' case(s) on this computer'; }
+
+function blankCase(){
+  return {
+    created: new Date().toISOString(), updated: new Date().toISOString(),
+    p1:{ pid:'', assessDate:'', navigator:'', site:'', referralSource:'', enrollMethod:'',
+         legalName:'', prefName:'', dob:'', age:'', address:'', city:'', zip:'', phone:'', mayText:'',
+         email:'', bestContact:'', bestTimes:'', language:'', interpreter:'', accommodation:'',
+         resident:'', age18:'', group:'', housingArr:'', householdSize:'', involvement:'',
+         targetPop:[], incomeDocStatus:'', determination:'', determBy:'', determDate:'',
+         receives:'', adults:'', children:'', hhTotal:'', periodFrom:'', periodTo:'',
+         decreased90:'', expected60:'', totalMonthly:'', totalAnnual:'', incomeDoc:'',
+         verifReviewed:[], incomeDeterm:'', guideline:'', guidelineDate:'', incomeNotes:'',
+         race:[], ethnicity:'', gender:'',
+         consent:'', consentDate:'', contactConsent:[], consentInitials:'' },
+    pt:{ t1:'',t2:'',t3:'',t4:'',t5:'',t6:'',t7:'', emergency:'', emergencyTime:'', supervisor:'',
+         supervisorName:'', partnerReferral:'', partnerConf:'', transportArranged:'', transportConf:'',
+         foodShelter:'', foodConf:'', safetyPlan:'', safetyFollowDate:'', notes:'', cont:'' },
+    p2:{ answers:{}, summaries:{}, hb15:{}, hb16:{},
+         m17:{ consent:'', date:'', heightFt:'', heightIn:'', weight:'', bmi:'', bmiCat:'', bp:'', referral:'' } },
+    p3:{ priorities:[], strengths:'', trusted:'', prefLocation:'', cultural:'', barriers:'',
+         goals:[], agrees:'', copyReceived:'' },
+    refs:[],
+    p4:[],
+    p5:{ reassess:{}, evidence:{}, incomeExit:'', incomeExitStatus:'', incomeChange:'',
+         ds:{}, reasonNotCompleted:'', remainsConnected:'',
+         s1:'', s2:'', s3:'', s4:'', rating:'', helpful:'', improve:'', mayContact:'',
+         exitDate:'', reason:'', fuMeasure:'', exitMeasure:'', refMeasure:'',
+         transitionPlan:'', handoff:'', review:[], certDate:'' },
+    p6:{ enrollDate:'', services:[], nNutrition:'', nActivity:'', nCoaching:'',
+         pts:{ base:{}, d60:{}, d90:{}, d180:{} },
+         calories:'', caloriesEv:'', activity:'', activityEv:'', decBMI:'Auto', decBMIEv:'',
+         m60:'', m60Ev:'', m90:'', m90Ev:'', m180:'', m180Ev:'' },
+    p7:[],
+    notes:''
+  };
+}
+
+function nextPid(){
+  let max = 0;
+  for(const c of Object.values(cases)){
+    const m = (c.p1.pid||'').match(/^AACCAA-27-(\d{4})$/);
+    if(m) max = Math.max(max, parseInt(m[1],10));
+  }
+  return ID_PREFIX + String(max+1).padStart(4,'0');
+}
+
+/* =====================================================================
+   Derivations — mirror the FY27 Performance Measure Data Dictionary
+   ===================================================================== */
+function fmtDate(iso){
+  if(!iso) return '';
+  const m = iso.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if(!m) return iso;
+  return `${+m[2]}/${+m[3]}/${m[1]}`;
+}
+function monthKey(iso){
+  if(!iso) return '';
+  const m = iso.match(/^(\d{4})-(\d{2})/);
+  return m ? `${m[1]}-${m[2]}` : '';
+}
+function totalHeightIn(c){
+  const ft = parseFloat(c.p2.m17.heightFt), inch = parseFloat(c.p2.m17.heightIn);
+  if(isNaN(ft) && isNaN(inch)) return NaN;
+  return (isNaN(ft)?0:ft)*12 + (isNaN(inch)?0:inch);
+}
+function bmiFor(weight, hIn){
+  const w = parseFloat(weight);
+  if(!w || !hIn || isNaN(hIn)) return '';
+  return String(Math.round(703 * w / (hIn*hIn) * 10) / 10);
+}
+function bmiCategory(b){
+  const v = parseFloat(b);
+  if(isNaN(v)) return '';
+  return v < 18.5 ? 'Underweight' : v < 25 ? 'Healthy range' : v < 30 ? 'Overweight' : 'Obesity';
+}
+function yn(v){ return v==='Yes' ? 'Y' : v==='No' ? 'N' : ''; }
+function screensMarked(c){
+  return DOMAINS.filter(d => ((c.p2.summaries[d.key]||{}).screen||'') !== '').length;
+}
+function assessmentComplete(c){ return screensMarked(c) === DOMAINS.length; }
+function joinList(a){ return (a||[]).join('; '); }
+
+function derived(c){
+  const p1=c.p1, p5=c.p5, p6=c.p6;
+  const refInit = c.refs.filter(r=>r.dateInit).length;
+  const completedRefs = c.refs.filter(r=>r.status==='Service received/completed');
+  const verifiedRefs = completedRefs.filter(r=>r.verification);
+  const p4RefDone = c.p4.some(f=>f.refCompleted==='Yes');
+  const refDoneCount = completedRefs.length;
+  const refDone = verifiedRefs.length>0 || p4RefDone;
+  const verif = (verifiedRefs[0]||completedRefs[0]||{}).verification || '';
+  const fuCount = c.p4.length;
+  const fuDone = c.p4.some(f=>f.contactType==='Completed' && f.meetsDef==='Yes');
+  const latestStatus = (c.p4.length ? c.p4[c.p4.length-1].caseStatus : '') || '';
+
+  const enrolled = p1.consent==='Y' &&
+    (p1.determination==='Eligible' || p1.determination==='Provisionally enrolled pending documentation') ? 'Y'
+    : (p1.determination==='Not eligible/referred elsewhere' ? 'N' : (p1.consent==='N' ? 'N' : ''));
+
+  // Exit-survey measure: explicit Part 5 D answer wins; else suggest from survey answers
+  const surveyAnswered = [p5.s1,p5.s2,p5.s3,p5.s4,p5.rating].some(v=>v);
+  const exitSurvey = p5.exitMeasure==='Yes' ? 'Y' : p5.exitMeasure==='No' ? 'N' : (surveyAnswered ? 'Y' : '');
+
+  const hIn = totalHeightIn(c);
+  const bmiBase = c.p2.m17.bmi || bmiFor(c.p2.m17.weight, hIn);
+  const pt = k => c.p6.pts[k]||{};
+  const bmiAt = k => pt(k).bmi || bmiFor(pt(k).weight, hIn);
+
+  let decBMI = p6.decBMI;
+  if(!decBMI || decBMI==='Auto'){
+    const base = parseFloat(bmiBase);
+    const later = ['d180','d90','d60'].map(k=>parseFloat(bmiAt(k))).filter(v=>!isNaN(v));
+    decBMI = (!isNaN(base) && later.length) ? (later[0] < base ? 'Y':'N') : '';
+  } else decBMI = yn(decBMI);
+
+  const obFlag = v => v==='Yes' ? 'Y' : v==='No' ? 'N' : '';
+
+  return {
+    pid: p1.pid, enrollDate: fmtDate(p1.assessDate), enrollMonth: monthKey(p1.assessDate),
+    navigator: p1.navigator, site: p1.site, zip: p1.zip,
+    residency: p1.resident==='Yes'?'Y':(p1.resident?'N':''),
+    age18: yn(p1.age18), household: p1.householdSize,
+    income: p1.incomeDocStatus, targetPop: joinList(p1.targetPop),
+    consent: p1.consent, enrolled,
+    assessDone: assessmentComplete(c) ? 'Y' : (screensMarked(c)>0 ? 'N' : ''),
+    assessDate: fmtDate(p1.assessDate),
+    refMade: refInit>0 ? 'Y':'N', refInit,
+    refDone: refDone ? 'Y':'N', refDoneCount, verif,
+    fuDone: fuDone ? 'Y':'N', fuCount, latestStatus,
+    exitSurvey, exitDate: fmtDate(p5.exitDate), closure: p5.reason,
+    ds: DIRECT_SERVICES.map(s => p5.ds[s.key] ? 'Y':'N'),
+    obEnrolled: p6.enrollDate ? 'Y' : '', obEnrollDate: fmtDate(p6.enrollDate),
+    calories: obFlag(p6.calories), activity: obFlag(p6.activity), decBMI,
+    m60: obFlag(p6.m60), m90: obFlag(p6.m90), m180: obFlag(p6.m180),
+    wBase: c.p2.m17.weight, bmiBase, bmi60: bmiAt('d60'), bmi90: bmiAt('d90'), bmi180: bmiAt('d180'),
+    heightIn: isNaN(hIn)||!hIn ? '' : String(hIn),
+    notes: c.notes
+  };
+}
+
+function pmRow(c){
+  const d = derived(c);
+  return [ d.pid, d.enrollDate, d.enrollMonth, d.navigator, d.site, d.zip,
+    d.residency, d.age18, d.household, d.income, d.targetPop, d.consent, d.enrolled,
+    d.assessDone, d.assessDate, d.refMade, d.refInit || '', d.refDone, d.refDoneCount || '', d.verif,
+    d.fuDone, d.fuCount || '', d.exitSurvey, d.exitDate, d.closure,
+    ...d.ds, d.obEnrolled, d.obEnrollDate, d.calories, d.activity, d.decBMI,
+    d.m60, d.m90, d.m180, d.wBase, d.bmiBase, d.bmi60, d.bmi90, d.bmi180, d.notes ];
+}
+window.pmRowFor = id => pmRow(cases[id]);
+
+function respRow(c){
+  const p1=c.p1, pt=c.pt, p2=c.p2, p3=c.p3, p5=c.p5, p6=c.p6, d=derived(c);
+  const sum = key => p2.summaries[key]||{};
+  const domainCols = [];
+  for(const dm of DOMAINS){
+    const s = sum(dm.key);
+    domainCols.push(s.screen||'', s.help||'', s.priority||'', s.referral||'');
+  }
+  const pr = i => (p3.priorities[i]||{}).need || '';
+  const reviewDone = p5.review.length===FINAL_REVIEW.length && p5.review.every(Boolean) ? 'Y' : '';
+  const m17=p2.m17, hb15=p2.hb15, hb16=p2.hb16, pts=p6.pts;
+  return [ p1.pid, d.assessDate, d.enrollMonth, p1.navigator, p1.site, p1.referralSource, p1.enrollMethod,
+    p1.legalName, p1.prefName, fmtDate(p1.dob), p1.age, p1.address, p1.city, p1.zip, p1.phone, p1.mayText, p1.email,
+    p1.bestContact, p1.bestTimes, p1.language, p1.interpreter, p1.accommodation,
+    p1.resident, p1.age18, p1.group, p1.housingArr, p1.householdSize, p1.involvement,
+    joinList(p1.targetPop), p1.incomeDocStatus, p1.determination, p1.determBy, fmtDate(p1.determDate), d.enrolled,
+    p1.receives, p1.adults, p1.children, p1.hhTotal, fmtDate(p1.periodFrom), fmtDate(p1.periodTo),
+    p1.decreased90, p1.expected60, p1.totalMonthly, p1.totalAnnual,
+    p1.incomeDoc, joinList(p1.verifReviewed), p1.incomeDeterm, p1.guideline,
+    joinList(p1.race), p1.ethnicity, p1.gender,
+    p1.consent, fmtDate(p1.consentDate), joinList(p1.contactConsent),
+    pt.t1, pt.t2, pt.t3, pt.t4, pt.t5, pt.t6, pt.t7, pt.emergency, pt.safetyPlan, pt.cont,
+    ...domainCols,
+    d.assessDone,
+    hb15.fruitveg||'', hb15.sugary||'', hb15.difficulty||'', hb15.wants||'', hb15.goal||'',
+    hb16.days||'', hb16.minutes||'', hb16.estweek||'', joinList(hb16.limits), hb16.wants||'', hb16.goal||'',
+    m17.consent, fmtDate(m17.date), d.heightIn, m17.weight, d.bmiBase, m17.bmiCat||bmiCategory(d.bmiBase), m17.bp, m17.referral,
+    pr(0), pr(1), pr(2), p3.agrees, p3.copyReceived,
+    d.refInit||'', d.refMade, d.refDoneCount||'', d.refDone, d.verif,
+    d.fuCount||'', d.fuDone, d.latestStatus,
+    ...EXIT_DOMAINS.map(([k])=>p5.reassess[k]||''),
+    p5.incomeExit, p5.incomeChange, p5.remainsConnected, p5.reasonNotCompleted,
+    ...d.ds,
+    p5.s1, p5.s2, p5.s3, p5.s4, p5.rating, p5.helpful, p5.improve, p5.mayContact,
+    d.exitSurvey, d.exitDate, p5.reason, p5.fuMeasure, p5.exitMeasure, p5.refMeasure, p5.transitionPlan,
+    reviewDone,
+    d.obEnrolled, d.obEnrollDate, joinList(p6.services), p6.nNutrition, p6.nActivity, p6.nCoaching,
+    (pts.d60||{}).weight||'', d.bmi60, (pts.d90||{}).weight||'', d.bmi90, (pts.d180||{}).weight||'', d.bmi180,
+    d.calories, d.activity, d.decBMI, d.m60, d.m90, d.m180, c.notes ];
+}
+window.respRowFor = id => respRow(cases[id]);
+
+/* =====================================================================
+   CSV / file helpers
+   ===================================================================== */
+function csvEscape(v){
+  v = (v===null||v===undefined) ? '' : String(v);
+  return /[",\n\r]/.test(v) ? '"' + v.replace(/"/g,'""') + '"' : v;
+}
+function toCSV(headers, rows){
+  return [headers, ...rows].map(r => r.map(csvEscape).join(',')).join('\r\n');
+}
+function download(name, content, type){
+  const blob = new Blob([content], {type: type || 'text/csv;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 500);
+}
+function stamp(){ return new Date().toISOString().slice(0,10); }
+function selectedCases(onlyId){
+  const ids = onlyId ? [onlyId] : Object.keys(cases);
+  return ids.map(id => cases[id]).filter(Boolean)
+    .sort((a,b)=>(a.p1.pid||'').localeCompare(b.p1.pid||''));
+}
+
+function exportPMTracker(onlyId){
+  download(`PM_Tracker_rows_${stamp()}.csv`, toCSV(PM_HEADERS, selectedCases(onlyId).map(pmRow)));
+}
+function exportResponses(){
+  download(`Assessment_Responses_${stamp()}.csv`, toCSV(RESP_HEADERS, selectedCases().map(respRow)));
+}
+function exportDomainDetail(){
+  const rows = [];
+  for(const c of selectedCases()){
+    const pid = c.p1.pid;
+    for(const dm of DOMAINS){
+      const a = c.p2.answers[dm.key]||{};
+      for(const q of dm.qs){
+        const v = q.t==='multi' ? joinList(a[q.k]) : (a[q.k]||'');
+        if(v) rows.push([pid, dm.name, q.l, v]);
+      }
+      const s = c.p2.summaries[dm.key]||{};
+      if(s.notes) rows.push([pid, dm.name, 'Domain notes', s.notes]);
+    }
+    for(const [set, name] of [[HB15,'15. Nutrition and healthy eating'],[HB16,'16. Physical activity']]){
+      const store = set===HB15 ? c.p2.hb15 : c.p2.hb16;
+      for(const q of set){
+        const v = q.t==='multi' ? joinList(store[q.k]) : (store[q.k]||'');
+        if(v) rows.push([pid, name, q.l, v]);
+      }
+    }
+  }
+  download(`Domain_Detail_${stamp()}.csv`, toCSV(DD_HEADERS, rows));
+}
+function exportReferrals(){
+  const rows = [];
+  for(const c of selectedCases()) for(const r of c.refs)
+    rows.push([c.p1.pid, r.domain, r.provider, fmtDate(r.dateInit), r.status, fmtDate(r.dateDone),
+               r.verification, r.consent, fmtDate(r.consentDate), r.notes]);
+  download(`Referrals_${stamp()}.csv`, toCSV(REF_HEADERS, rows));
+}
+function exportFollowUps(){
+  const rows = [];
+  for(const c of selectedCases()) for(const f of c.p4)
+    rows.push([c.p1.pid, fmtDate(f.date), f.method, f.contactType, f.reached, f.connected, f.received,
+               f.verification, joinList(f.barriers), f.newNeeds, f.incomeChanged, f.caseStatus,
+               f.meetsDef, f.refCompleted, fmtDate(f.nextDate), f.notes]);
+  download(`FollowUps_${stamp()}.csv`, toCSV(FU_HEADERS, rows));
+}
+function exportServicePlan(){
+  const rows = [];
+  for(const c of selectedCases()){
+    const pid = c.p1.pid;
+    c.p3.priorities.forEach((p,i)=>{ if(p.need||p.outcome)
+      rows.push([pid,'Priority', i+1, p.need, p.priority, p.outcome, '', '']); });
+    c.p3.goals.forEach((g,i)=>{ if(g.goal||g.pAction||g.nAction)
+      rows.push([pid,'Goal', i+1, g.goal, '', g.pAction, g.nAction, fmtDate(g.targetDate)]); });
+  }
+  download(`Service_Plan_${stamp()}.csv`, toCSV(SP_HEADERS, rows));
+}
+function exportAddlInfo(){
+  const rows = [];
+  for(const c of selectedCases()) for(const a of c.p7)
+    rows.push([c.p1.pid, a.item, a.source, fmtDate(a.requested), fmtDate(a.due), fmtDate(a.received), a.status, a.owner, a.notes]);
+  download(`Additional_Info_${stamp()}.csv`, toCSV(AI_HEADERS, rows));
+}
+function exportCaseJSON(){
+  const c = cases[currentId]; if(!c) return;
+  download(`SDOH_case_${c.p1.pid || currentId}_${stamp()}.json`,
+    JSON.stringify({format:'aaccaa-sdoh-case', version:2, cases:{[currentId]:c}}, null, 2),
+    'application/json');
+}
+function exportAllCasesJSON(){
+  download(`SDOH_all_cases_backup_${stamp()}.json`,
+    JSON.stringify({format:'aaccaa-sdoh-case', version:2, cases}, null, 2), 'application/json');
+}
+function loadCaseFile(ev){
+  const file = ev.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try{
+      const data = JSON.parse(reader.result);
+      if(data.format !== 'aaccaa-sdoh-case') throw new Error('Not a case file');
+      let n = 0;
+      for(const [id, c] of Object.entries(data.cases)){
+        const existing = cases[id];
+        if(existing && existing.updated > c.updated &&
+           !confirm(`Case ${c.p1.pid || id} on this computer is newer than the file. Overwrite with the file version?`)) continue;
+        cases[id] = c; n++;
+      }
+      persist(); renderHome();
+      alert(`Loaded ${n} case(s) from ${file.name}.`);
+    }catch(e){ alert('Could not read that file: ' + e.message); }
+  };
+  reader.readAsText(file);
+  ev.target.value = '';
+}
+
+/* =====================================================================
+   Views
+   ===================================================================== */
+function showView(v){
+  document.getElementById('viewHome').hidden  = v!=='home';
+  document.getElementById('viewCase').hidden  = v!=='case';
+  document.getElementById('viewShare').hidden = v!=='share';
+  document.getElementById('navCases').classList.toggle('active', v!=='share');
+  document.getElementById('navShare').classList.toggle('active', v==='share');
+  if(v==='home'){ currentId = null; renderHome(); }
+}
+function esc(s){ return (s===null||s===undefined)?'':String(s).replace(/[&<>"]/g, ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch])); }
+
+function caseChips(c){
+  const d = derived(c);
+  const chips = [];
+  if(d.enrolled==='Y') chips.push('<span class="chip ok">Enrolled</span>');
+  else if(d.consent==='Y') chips.push('<span class="chip info">Consented</span>');
+  else chips.push('<span class="chip">Intake</span>');
+  const triageFlag = ['t1','t2','t3','t4','t6','t7'].some(k => ['No','Partial'].includes(c.pt[k])) || c.pt.t6==='Yes' || c.pt.t7==='Yes';
+  if(triageFlag && c.pt.cont!=='Yes') chips.push('<span class="chip bad">Triage open</span>');
+  const n = screensMarked(c);
+  if(n===DOMAINS.length) chips.push('<span class="chip ok">Assessed</span>');
+  else if(n>0) chips.push(`<span class="chip warn">Assessment ${n}/14</span>`);
+  if(c.refs.length) chips.push(`<span class="chip info">${c.refs.length} referral${c.refs.length>1?'s':''}</span>`);
+  if(c.p7.some(a=>a.status && a.status!=='Received' && a.status!=='No longer needed')) chips.push('<span class="chip warn">Info needed</span>');
+  if(d.obEnrolled==='Y') chips.push('<span class="chip info">Obesity prog.</span>');
+  if(d.exitDate) chips.push('<span class="chip">Exited</span>');
+  return chips.join('');
+}
+
+function renderHome(){
+  const q = (document.getElementById('searchBox').value||'').toLowerCase();
+  const wrap = document.getElementById('caseTableWrap');
+  const list = Object.entries(cases)
+    .filter(([id,c]) => !q || [c.p1.pid,c.p1.legalName,c.p1.prefName,c.p1.navigator].join(' ').toLowerCase().includes(q))
+    .sort((a,b)=> b[1].updated.localeCompare(a[1].updated));
+  if(!list.length){ wrap.innerHTML = '<div class="empty">No assessments yet. Click <b>+ New Assessment</b> to begin.</div>'; updateCount(); return; }
+  wrap.innerHTML = `<table><thead><tr>
+      <th>Participant ID</th><th>Name</th><th>Navigator</th><th>Status</th><th>Last edited</th><th></th>
+    </tr></thead><tbody>` +
+    list.map(([id,c]) => `<tr>
+      <td><b>${esc(c.p1.pid)||'<i>no ID</i>'}</b></td>
+      <td>${esc(c.p1.prefName || c.p1.legalName)}</td>
+      <td>${esc(c.p1.navigator)}</td>
+      <td>${caseChips(c)}</td>
+      <td>${new Date(c.updated).toLocaleString()}</td>
+      <td style="white-space:nowrap"><button class="btn small" onclick="openCase('${id}')">Open</button></td>
+    </tr>`).join('') + '</tbody></table>';
+  updateCount();
+  renderBackupUI();
+}
+
+function newCase(){
+  const id = 'c' + Date.now().toString(36) + Math.floor(Math.random()*1e6).toString(36);
+  cases[id] = blankCase();
+  cases[id].p1.pid = nextPid();
+  cases[id].p1.assessDate = new Date().toISOString().slice(0,10);
+  persist();
+  openCase(id);
+}
+function openCase(id){
+  currentId = id; activeTab = 'part1';
+  showView('case');
+  renderCase();
+}
+function deleteCase(){
+  const c = cases[currentId];
+  if(!confirm(`Delete case ${c.p1.pid || '(no ID)'}? This cannot be undone. Consider "Save case file" first.`)) return;
+  delete cases[currentId]; persist(); showView('home');
+}
+async function archiveCase(){
+  const c = cases[currentId]; if(!c) return;
+  if(backupState !== 'ok'){
+    alert('Connect the SharePoint backup folder first — archiving removes the case from this computer, so it must be safely backed up before it can be archived.');
+    return;
+  }
+  if(!confirm(`Archive case ${c.p1.pid || '(no ID)'}?\n\nIts backup file stays in the SharePoint folder (with full version history); the case is removed from this computer. To work on it again later, use "Load case file…" and pick it from the SharePoint folder.`)) return;
+  await backupToFolder(true);
+  if(backupState !== 'ok'){ alert('Backup did not succeed — the case was NOT removed.'); return; }
+  delete cases[currentId];
+  localStorage.setItem(STORE_KEY, JSON.stringify(cases));
+  updateCount();
+  showView('home');
+}
+
+/* =====================================================================
+   Form rendering
+   ===================================================================== */
+function fld(part, key, label, type, opts, hint, attrs){
+  if(part==='notesRoot'){
+    const val = cases[currentId].notes ?? '';
+    return `<div><label class="f">${esc(label)}</label><textarea oninput="cases[currentId].notes=this.value;scheduleSave()">${esc(val)}</textarea></div>`;
+  }
+  const c = cases[currentId];
+  const val = c[part][key] ?? '';
+  const oninput = `setVal('${part}','${key}',this.value)`;
+  let control;
+  if(type==='select'){
+    control = `<select onchange="${oninput}">` +
+      opts.map(o=>`<option value="${esc(o)}"${String(val)===String(o)?' selected':''}>${esc(o)||'—'}</option>`).join('') + '</select>';
+  } else if(type==='textarea'){
+    control = `<textarea oninput="${oninput}">${esc(val)}</textarea>`;
+  } else {
+    control = `<input type="${type}" value="${esc(val)}" oninput="${oninput}" ${attrs||''}>`;
+  }
+  return `<div><label class="f">${esc(label)}</label>${control}${hint?`<div class="hint" style="margin:3px 0 0">${hint}</div>`:''}</div>`;
+}
+function multiFld(part, key, label, opts, hint){
+  const c = cases[currentId];
+  const cur = c[part][key]||[];
+  return `<div><label class="f">${esc(label)}</label><div class="checks">` +
+    opts.map(o=>`<label><input type="checkbox" ${cur.includes(o)?'checked':''}
+      onchange="toggleMulti('${part}','${key}',${JSON.stringify(o).replace(/"/g,'&quot;')},this.checked)"> ${esc(o)}</label>`).join('') +
+    `</div>${hint?`<div class="hint" style="margin:3px 0 0">${hint}</div>`:''}</div>`;
+}
+function setVal(part, key, value){
+  cases[currentId][part][key] = value;
+  scheduleSave();
+}
+function toggleMulti(part, key, opt, on){
+  const arr = cases[currentId][part][key] || (cases[currentId][part][key] = []);
+  const i = arr.indexOf(opt);
+  if(on && i<0) arr.push(opt);
+  if(!on && i>=0) arr.splice(i,1);
+  scheduleSave();
+}
+
+const TABS = [
+  ['part1','Part 1 · Enrollment'],
+  ['partT','Triage'],
+  ['part2','Part 2 · Assessment'],
+  ['part3','Part 3 · Plan & Referrals'],
+  ['part4','Part 4 · Follow-Up'],
+  ['part5','Part 5 · Exit'],
+  ['part6','Part 6 · Obesity'],
+  ['part7','Add’l Info'],
+  ['partS','Summary & Export'],
+];
+function tabDone(c, tab){
+  const d = derived(c);
+  switch(tab){
+    case 'part1': return !!(c.p1.pid && c.p1.consent && d.enrolled==='Y');
+    case 'partT': return c.pt.cont==='Yes';
+    case 'part2': return assessmentComplete(c);
+    case 'part3': return c.refs.length>0 || c.p3.agrees==='Yes';
+    case 'part4': return d.fuDone==='Y';
+    case 'part5': return d.exitSurvey==='Y' && !!c.p5.exitDate;
+    case 'part6': return !!c.p6.enrollDate;
+    case 'part7': return c.p7.length>0 && c.p7.every(a=>a.status==='Received'||a.status==='No longer needed');
+    default: return false;
+  }
+}
+function refreshTabDots(){
+  const c = cases[currentId]; if(!c) return;
+  for(const [id] of TABS){
+    const dot = document.querySelector(`#tab_${id} .dot`);
+    if(dot) dot.classList.toggle('done', !!tabDone(c,id));
+  }
+  const t = document.getElementById('caseTitle');
+  t.textContent = `${c.p1.pid || 'New case'}${c.p1.prefName||c.p1.legalName ? ' — '+(c.p1.prefName||c.p1.legalName) : ''}`;
+}
+
+function renderCase(){
+  const c = cases[currentId];
+  document.getElementById('tabBar').innerHTML = TABS.map(([id,label]) =>
+    `<button id="tab_${id}" class="${id===activeTab?'active':''}" onclick="switchTab('${id}')">${label}<span class="dot"></span></button>`).join('');
+  renderPart1(); renderTriage(); renderPart2(); renderPart3(); renderPart4(); renderPart5(); renderPart6(); renderPart7(); renderSummary();
+  switchTab(activeTab);
+  document.getElementById('printMeta').textContent =
+    `Participant ${c.p1.pid || '—'} · printed ${new Date().toLocaleDateString()} · CONFIDENTIAL — authorized program record only`;
+  refreshTabDots();
+}
+function switchTab(id){
+  activeTab = id;
+  for(const [tid] of TABS){
+    document.getElementById(tid).hidden = tid!==id;
+    document.getElementById('tab_'+tid).classList.toggle('active', tid===id);
+  }
+  if(id==='partS') renderSummary();
+}
+
+/* ---------- Part 1 ---------- */
+function renderPart1(){
+  document.getElementById('part1').innerHTML = `
+  <div class="card">
+    <h2>Part 1 — Enrollment, Eligibility, Income, Consent</h2>
+    <p class="hint">Complete during the first program contact. Enrollment is not complete until the required eligibility and income-status fields are documented.</p>
+    <h3>A. Administrative information</h3>
+    <div class="grid c3">
+      ${fld('p1','pid','Participant ID','text',null,'Format AACCAA-27-0000 (auto-suggested)')}
+      ${fld('p1','assessDate','Assessment date','date',null,'Drives the enrollment month in the PM Tracker')}
+      ${fld('p1','navigator','Navigator','text')}
+      ${fld('p1','site','Program site/location','text')}
+      ${fld('p1','referralSource','Referral source','text')}
+      ${fld('p1','enrollMethod','Enrollment method','select',['','In person','Phone','Virtual'])}
+    </div>
+    <h3>B. Enrollment eligibility and target-population verification</h3>
+    <div class="grid c3">
+      ${fld('p1','resident','Anne Arundel County resident verified?','select',['','Yes','No','Pending'])}
+      ${fld('p1','age18','Age 18 or older?','select',['','Yes','No'])}
+      ${fld('p1','group','Participant group','select',['','Adult individual','Parent/caregiver','Older adult','Other'])}
+      ${fld('p1','housingArr','Current housing arrangement','select',['','Own/rent','Staying with others','Temporary housing','Shelter','Unsheltered','Other'])}
+      ${fld('p1','householdSize','Household size','select',['','1','2','3','4','5','6 or more'])}
+      ${fld('p1','involvement','Current AACCAA involvement','select',['','New to AACCAA','Existing AACCAA participant','Referred from another AACCAA program'])}
+    </div>
+    <div class="grid c2" style="margin-top:12px">
+      ${multiFld('p1','targetPop','Target-population basis (select all that apply)',
+        ['Low-income household','Racial/ethnic minority population','Underserved community','Food insecurity','Limited healthcare access','Obesity/chronic-disease risk','Other'])}
+      ${fld('p1','incomeDocStatus','Income documentation status at enrollment','select',
+        ['','Verified','Partly verified','Self-reported','No income','Declined','Pending'],'May not be left blank for enrollment')}
+    </div>
+    <div class="grid c3" style="margin-top:12px">
+      ${fld('p1','determination','Enrollment determination','select',
+        ['','Eligible','Provisionally enrolled pending documentation','Supervisor review','Not eligible/referred elsewhere'])}
+      ${fld('p1','determBy','Determination completed by','text')}
+      ${fld('p1','determDate','Determination date','date')}
+    </div>
+    <p class="hint" style="margin-top:8px"><b>Enrollment rule:</b> document income status and target-population basis during enrollment.
+      When proof is not immediately available, use self-attestation or provisional enrollment and schedule verification rather than leaving the income section incomplete.</p>
+    <h3>C. Household income documentation</h3>
+    <p class="hint">Record gross household income before taxes. Do <b>not</b> record Social Security numbers, bank-account numbers, payment-card numbers, or unredacted account information. Keep the detailed income-source rows on the printed packet / case file.</p>
+    <div class="grid c3">
+      ${fld('p1','receives','Does the household currently receive income?','select',['','Yes','No income','Income varies','Unknown','Declined'])}
+      ${fld('p1','adults','Adults in household','number',null,null,'min="0" max="20"')}
+      ${fld('p1','children','Children/dependents','number',null,null,'min="0" max="20"')}
+      ${fld('p1','hhTotal','Household total','number',null,null,'min="1" max="30"')}
+      ${fld('p1','periodFrom','Income period from','date')}
+      ${fld('p1','periodTo','Income period through','date')}
+      ${fld('p1','decreased90','Income decreased/stopped during past 90 days?','select',['','Yes','No','Not sure','Declined'])}
+      ${fld('p1','expected60','Income change expected within 60 days?','select',['','Increase','Decrease','End','No change expected','Not sure'])}
+      ${fld('p1','totalMonthly','Total gross monthly household income ($)','number',null,null,'min="0" step="1"')}
+      ${fld('p1','totalAnnual','Total annualized gross income ($)','number',null,null,'min="0" step="1"')}
+      ${fld('p1','incomeDoc','Income documentation status','select',['','Fully verified','Partly verified','Self-reported only','No income','Declined'])}
+      ${fld('p1','incomeDeterm','Enrollment income/targeting determination','select',['','Meets program target','Provisionally eligible/pending verification','Does not meet target','Supervisor review'])}
+    </div>
+    <div class="grid c2" style="margin-top:12px">
+      ${multiFld('p1','verifReviewed','Verification reviewed',['Pay stub','Benefit letter','Tax form/return','Employer statement','No-income statement','Other'])}
+      ${fld('p1','guideline','Guideline, threshold or policy used','text')}
+    </div>
+    ${fld('p1','incomeNotes','Income calculation notes, changes or documentation exceptions','textarea')}
+    <h3>D. Participant profile</h3>
+    <div class="grid c3">
+      ${fld('p1','legalName','Legal name','text')}
+      ${fld('p1','prefName','Preferred name','text')}
+      ${fld('p1','dob','Date of birth','date')}
+      ${fld('p1','age','Age','number',null,null,'min="0" max="120"')}
+      ${fld('p1','address','Home address','text')}
+      ${fld('p1','city','City','text')}
+      ${fld('p1','zip','ZIP code','text',null,null,'inputmode="numeric" maxlength="10"')}
+      ${fld('p1','phone','Phone','tel')}
+      ${fld('p1','mayText','May text?','select',['','Yes','No'])}
+      ${fld('p1','email','Email','email')}
+      ${fld('p1','bestContact','Best contact method','select',['','Call','Text','Email','Mail','Through another person'])}
+      ${fld('p1','bestTimes','Best contact days/times','text')}
+      ${fld('p1','language','Preferred language','text')}
+      ${fld('p1','interpreter','Interpreter needed?','select',['','Yes','No'])}
+      ${fld('p1','accommodation','Accessibility accommodation','text')}
+    </div>
+    <h3>E. Demographic information for aggregate reporting</h3>
+    <div class="grid c2">
+      ${multiFld('p1','race','Race (select all that apply)',['American Indian/Alaska Native','Asian','Black/African American','Native Hawaiian/Pacific Islander','White','Another race','Declined'])}
+      <div class="grid c2" style="gap:12px">
+        ${fld('p1','ethnicity','Ethnicity','select',['','Hispanic/Latino','Not Hispanic/Latino','Declined'])}
+        ${fld('p1','gender','Gender identity','select',['','Woman','Man','Nonbinary','Another identity','Declined'])}
+      </div>
+    </div>
+    <h3>F. Participation and referral consent</h3>
+    <p class="hint"><b>Participant acknowledgment:</b> I understand that participation is voluntary. I may decline any question or service.
+      I authorize AACCAA staff to contact me about this program and, when I separately approve a referral, to share the minimum information
+      reasonably necessary with the selected service provider. I may withdraw permission for future information sharing at any time,
+      subject to information already disclosed and applicable law.</p>
+    <div class="grid c3">
+      ${fld('p1','consent','Program participation consent','select',['','Y','N'],'Required for enrollment. Note: participant incentives are prohibited under this grant.')}
+      ${fld('p1','consentDate','Consent date','date')}
+      ${fld('p1','consentInitials','Participant initials','text')}
+    </div>
+    <div style="margin-top:12px">
+      ${multiFld('p1','contactConsent','General contact consent',['Call','Text','Email','Mail'])}
+    </div>
+    <p class="hint" style="margin-top:8px">Signatures are collected on the printed packet; keep the signed page in the authorized program record.</p>
+  </div>`;
+}
+
+/* ---------- Triage ---------- */
+function renderTriage(){
+  const c = cases[currentId];
+  document.getElementById('partT').innerHTML = `
+  <div class="card">
+    <h2>Immediate-Needs and Safety Triage</h2>
+    <p class="hint">Resolve urgent conditions before proceeding with the full assessment.</p>
+    <div class="alert"><b>Safety override:</b> stop the routine assessment when the participant reports immediate danger, no safe place to stay
+      tonight, no food for today, a life-threatening medical concern, inability to obtain essential medication, or another urgent condition.
+      Follow the agency emergency and mandatory-reporting procedures. Do not promise confidentiality the agency cannot legally maintain.</div>
+    ${TRIAGE_QS.map(q=>`
+      <div class="qrow"><div class="ql">${esc(q.l)}</div>
+        <select onchange="setVal('pt','${q.k}',this.value)">
+          ${q.o.map(o=>`<option value="${esc(o)}"${(c.pt[q.k]||'')===o?' selected':''}>${esc(o)||'—'}</option>`).join('')}
+        </select></div>`).join('')}
+    <h3>Urgent response taken</h3>
+    <div class="grid c3">
+      ${fld('pt','emergency','Emergency services contacted','select',['','Yes','No','Not applicable'])}
+      ${fld('pt','emergencyTime','Time','time')}
+      ${fld('pt','supervisor','Supervisor consulted','select',['','Yes','No'])}
+      ${fld('pt','supervisorName','Supervisor name','text')}
+      ${fld('pt','partnerReferral','Same-day partner referral','text')}
+      ${fld('pt','partnerConf','Confirmation','text')}
+      ${fld('pt','transportArranged','Transportation arranged','text',null,'Also counts toward direct transportation services when provided')}
+      ${fld('pt','transportConf','Confirmation','text')}
+      ${fld('pt','foodShelter','Food/shelter/utility assistance','text')}
+      ${fld('pt','foodConf','Confirmation','text')}
+      ${fld('pt','safetyPlan','Safety plan completed','select',['','Yes','No','Not applicable'])}
+      ${fld('pt','safetyFollowDate','Follow-up date','date')}
+    </div>
+    ${fld('pt','notes','Triage notes','textarea')}
+    <div class="sumrow" style="margin-top:12px">
+      ${fld('pt','cont','Continue assessment?','select',['','Yes','No'],'Yes — urgent need stabilized or safely handed off. No — assessment stopped and follow-up scheduled.')}
+    </div>
+  </div>`;
+}
+
+/* ---------- Part 2 ---------- */
+function domainQuestion(dm, q){
+  const c = cases[currentId];
+  const a = c.p2.answers[dm.key] || (c.p2.answers[dm.key] = {});
+  if(q.t==='select'){
+    return `<div class="qrow"><div class="ql">${esc(q.l)}</div>
+      <select onchange="setDomainAnswer('${dm.key}','${q.k}',this.value)">
+        ${q.o.map(o=>`<option value="${esc(o)}"${(a[q.k]||'')===o?' selected':''}>${esc(o)||'—'}</option>`).join('')}
+      </select></div>`;
+  }
+  if(q.t==='multi'){
+    const cur = a[q.k]||[];
+    return `<div class="qrow"><div class="ql">${esc(q.l)}</div><div class="checks">` +
+      q.o.map(o=>`<label><input type="checkbox" ${cur.includes(o)?'checked':''}
+        onchange="toggleDomainMulti('${dm.key}','${q.k}',${JSON.stringify(o).replace(/"/g,'&quot;')},this.checked)"> ${esc(o)}</label>`).join('') +
+      '</div></div>';
+  }
+  if(q.t==='textarea'){
+    return `<div style="padding:7px 0"><div class="ql" style="margin-bottom:4px">${esc(q.l)}</div>
+      <textarea oninput="setDomainAnswer('${dm.key}','${q.k}',this.value)">${esc(a[q.k]||'')}</textarea></div>`;
+  }
+  const type = q.t==='number' ? 'number' : 'text';
+  return `<div class="qrow"><div class="ql">${esc(q.l)}</div>
+    <input type="${type}" value="${esc(a[q.k]||'')}" oninput="setDomainAnswer('${dm.key}','${q.k}',this.value)"></div>`;
+}
+function domainSummary(dm){
+  const c = cases[currentId];
+  const s = c.p2.summaries[dm.key] || (c.p2.summaries[dm.key] = {});
+  const sel = (k,label,opts) => `<div><label class="f">${label}</label>
+    <select onchange="setDomainSummary('${dm.key}','${k}',this.value)">
+      ${opts.map(o=>`<option value="${esc(o)}"${(s[k]||'')===o?' selected':''}>${esc(o)||'—'}</option>`).join('')}
+    </select></div>`;
+  return `<div class="sumrow">
+    ${sel('screen','Positive screen?',['','Yes','No','Declined'])}
+    ${sel('help','Help requested?',['','Yes','No'])}
+    ${sel('priority','Priority',PRIORITY)}
+    ${sel('referral','Referral needed?',['','Yes','No'])}
+    <div><label class="f">Navigator initials</label>
+      <input type="text" maxlength="6" value="${esc(s.initials||'')}" oninput="setDomainSummary('${dm.key}','initials',this.value)"></div>
+  </div>`;
+}
+function setDomainAnswer(dk, qk, v){ cases[currentId].p2.answers[dk][qk] = v; scheduleSave(); }
+function toggleDomainMulti(dk, qk, opt, on){
+  const a = cases[currentId].p2.answers[dk];
+  const arr = a[qk] || (a[qk] = []);
+  const i = arr.indexOf(opt);
+  if(on && i<0) arr.push(opt);
+  if(!on && i>=0) arr.splice(i,1);
+  scheduleSave();
+}
+function setDomainSummary(dk, k, v){
+  cases[currentId].p2.summaries[dk][k] = v;
+  updateDomainProgress(); scheduleSave();
+}
+function hbField(store, q){
+  const c = cases[currentId];
+  const st = c.p2[store];
+  if(q.t==='select'){
+    return `<div class="qrow"><div class="ql">${esc(q.l)}</div>
+      <select onchange="setHB('${store}','${q.k}',this.value)">
+        ${q.o.map(o=>`<option value="${esc(o)}"${(st[q.k]||'')===o?' selected':''}>${esc(o)||'—'}</option>`).join('')}
+      </select></div>`;
+  }
+  if(q.t==='multi'){
+    const cur = st[q.k]||[];
+    return `<div class="qrow"><div class="ql">${esc(q.l)}</div><div class="checks">` +
+      q.o.map(o=>`<label><input type="checkbox" ${cur.includes(o)?'checked':''}
+        onchange="toggleHB('${store}','${q.k}',${JSON.stringify(o).replace(/"/g,'&quot;')},this.checked)"> ${esc(o)}</label>`).join('') + '</div></div>';
+  }
+  const type = q.t==='number' ? 'number' : 'text';
+  return `<div class="qrow"><div class="ql">${esc(q.l)}</div>
+    <input type="${type}" value="${esc(st[q.k]||'')}" oninput="setHB('${store}','${q.k}',this.value)"></div>`;
+}
+function setHB(store, k, v){ cases[currentId].p2[store][k] = v; scheduleSave(); }
+function toggleHB(store, k, opt, on){
+  const st = cases[currentId].p2[store];
+  const arr = st[k] || (st[k] = []);
+  const i = arr.indexOf(opt);
+  if(on && i<0) arr.push(opt);
+  if(!on && i>=0) arr.splice(i,1);
+  scheduleSave();
+}
+function setM17(k, v){
+  const m = cases[currentId].p2.m17;
+  m[k] = v;
+  if(['heightFt','heightIn','weight'].includes(k)){
+    const hIn = totalHeightIn(cases[currentId]);
+    const b = bmiFor(m.weight, hIn);
+    if(b !== ''){ m.bmi = b; m.bmiCat = bmiCategory(b);
+      const el=document.getElementById('m17bmi'); if(el) el.value = b;
+      const el2=document.getElementById('m17cat'); if(el2) el2.value = m.bmiCat; }
+  }
+  if(k==='bmi'){ m.bmiCat = bmiCategory(v); const el2=document.getElementById('m17cat'); if(el2) el2.value = m.bmiCat; }
+  scheduleSave();
+}
+function renderPart2(){
+  const c = cases[currentId];
+  const m = c.p2.m17;
+  document.getElementById('part2').innerHTML = `
+  <div class="card">
+    <h2>Part 2 — Comprehensive SDOH Assessment</h2>
+    <p class="hint">Ask every domain. Mark the summary row after discussing the participant's desire for assistance.
+      Participants may decline any question without losing access to other AACCAA services.
+      The assessment counts as completed when every domain's <b>Positive screen?</b> row is marked.
+      Use the exact response; do not infer.</p>
+    <div style="margin-bottom:12px;font-weight:700" id="domProgress"></div>
+    ${DOMAINS.map(dm=>`
+      <div class="domain">
+        <div class="dhead">${esc(dm.name)}</div>
+        ${dm.privacy?`<div class="alert">${esc(dm.privacy)}</div>`:''}
+        ${dm.qs.map(q=>domainQuestion(dm,q)).join('')}
+        ${domainSummary(dm)}
+      </div>`).join('')}
+  </div>
+  <div class="card">
+    <h2>Health Behavior and Obesity-Program Baseline</h2>
+    <p class="hint">Complete for all participants where practical. Complete measurements only with informed consent.</p>
+    <h3>15. Nutrition and healthy eating</h3>
+    ${HB15.map(q=>hbField('hb15',q)).join('')}
+    <h3>16. Physical activity</h3>
+    ${HB16.map(q=>hbField('hb16',q)).join('')}
+    <h3>17. Optional baseline measurements for obesity-program participants</h3>
+    <p class="hint">Obtain consent. Use a calibrated scale and consistent measurement procedures. Do not deny services when a participant declines measurement.</p>
+    <div class="grid c4">
+      <div><label class="f">Consented to measurement</label>
+        <select onchange="setM17('consent',this.value)">${['','Yes','No'].map(o=>`<option${m.consent===o?' selected':''}>${o||'—'}</option>`).join('')}</select></div>
+      <div><label class="f">Measurement date</label><input type="date" value="${esc(m.date)}" oninput="setM17('date',this.value)"></div>
+      <div><label class="f">Height (ft)</label><input type="number" min="3" max="7" value="${esc(m.heightFt)}" oninput="setM17('heightFt',this.value)"></div>
+      <div><label class="f">Height (in)</label><input type="number" min="0" max="11.5" step="0.5" value="${esc(m.heightIn)}" oninput="setM17('heightIn',this.value)"></div>
+      <div><label class="f">Weight (lb)</label><input type="number" min="50" max="700" step="0.1" value="${esc(m.weight)}" oninput="setM17('weight',this.value)"></div>
+      <div><label class="f">Calculated BMI</label><input type="number" step="0.1" id="m17bmi" value="${esc(m.bmi)}" oninput="setM17('bmi',this.value)"></div>
+      <div><label class="f">BMI category</label><input type="text" id="m17cat" value="${esc(m.bmiCat)}" readonly></div>
+      <div><label class="f">Blood pressure (if program-approved)</label><input type="text" placeholder="120/80" value="${esc(m.bp)}" oninput="setM17('bp',this.value)"></div>
+      <div><label class="f">Referral indicated?</label>
+        <select onchange="setM17('referral',this.value)">${['','Yes','No','Not assessed'].map(o=>`<option${m.referral===o?' selected':''}>${o||'—'}</option>`).join('')}</select></div>
+    </div>
+  </div>`;
+  updateDomainProgress();
+}
+function updateDomainProgress(){
+  const el = document.getElementById('domProgress'); if(!el || !currentId) return;
+  const n = screensMarked(cases[currentId]);
+  el.innerHTML = n===14 ? '<span class="summary-ok">14 / 14 domain summaries marked — assessment complete ✓</span>'
+                        : `${n} / 14 domain summary rows marked`;
+}
+
+/* ---------- Part 3 ---------- */
+function renderPart3(){
+  const c = cases[currentId];
+  const p = c.p3;
+  const prRow = (i)=>{
+    const pr = p.priorities[i]||{};
+    return `<tr>
+      <td style="width:36px;font-weight:700">${i+1}</td>
+      <td><input type="text" value="${esc(pr.need||'')}" oninput="setPriority(${i},'need',this.value)"></td>
+      <td style="width:190px"><select onchange="setPriority(${i},'priority',this.value)">
+        ${PRIORITY.map(o=>`<option value="${esc(o)}"${(pr.priority||'')===o?' selected':''}>${esc(o)||'—'}</option>`).join('')}</select></td>
+      <td><input type="text" value="${esc(pr.outcome||'')}" oninput="setPriority(${i},'outcome',this.value)"></td></tr>`;
+  };
+  const goalRow = (i)=>{
+    const g = p.goals[i]||{};
+    return `<tr>
+      <td style="width:36px;font-weight:700">${i+1}</td>
+      <td><input type="text" value="${esc(g.goal||'')}" oninput="setGoal(${i},'goal',this.value)"></td>
+      <td><input type="text" value="${esc(g.pAction||'')}" oninput="setGoal(${i},'pAction',this.value)"></td>
+      <td><input type="text" value="${esc(g.nAction||'')}" oninput="setGoal(${i},'nAction',this.value)"></td>
+      <td style="width:150px"><input type="date" value="${esc(g.targetDate||'')}" oninput="setGoal(${i},'targetDate',this.value)"></td></tr>`;
+  };
+  document.getElementById('part3').innerHTML = `
+  <div class="card">
+    <h2>Part 3 — Participant Priorities and Individualized Service Plan</h2>
+    <p class="hint">Build the plan with the participant. A positive screen does not automatically equal a referral.</p>
+    <h3>A. Participant priorities</h3>
+    <table><thead><tr><th>Rank</th><th>Need or goal selected by participant</th><th>Priority</th><th>Desired outcome</th></tr></thead>
+      <tbody>${[0,1,2,3,4].map(prRow).join('')}</tbody></table>
+    <h3>B. Strengths, supports and participant preferences</h3>
+    <div class="grid c2">
+      ${fld('p3','strengths','Existing strengths and resources','text')}
+      ${fld('p3','trusted','Trusted people or organizations','text')}
+      ${fld('p3','prefLocation','Preferred service location/method','select',['','In person','Phone','Virtual','Home/community','No preference'])}
+      ${fld('p3','cultural','Cultural, language, accessibility or scheduling considerations','text')}
+      ${fld('p3','barriers','Potential barriers to completing referrals','text')}
+    </div>
+    <h3>C. Individualized goals and actions</h3>
+    <table><thead><tr><th>#</th><th>Participant goal</th><th>Participant action</th><th>Navigator/partner action</th><th>Target date</th></tr></thead>
+      <tbody>${[0,1,2,3].map(goalRow).join('')}</tbody></table>
+    <h3>D. Plan approval</h3>
+    <div class="grid c3">
+      ${fld('p3','agrees','Participant agrees with this service plan','select',['','Yes','No','Needs revision'])}
+      ${fld('p3','copyReceived','Participant received a copy or summary','select',['','Yes','No','Declined'])}
+    </div>
+  </div>
+  <div class="card">
+    <h2>Referral and Closed-Loop Service Tracker</h2>
+    <p class="hint">One entry per referral; update the status until completed, closed, declined or replaced.
+      A referral counts toward the completion measure when status is <b>Service received/completed</b> with a verification source.
+      Record referral-specific consent before sharing information with a provider.
+      <b>Data entry rule:</b> count a person once for each unduplicated performance measure, even with multiple needs or referrals.</p>
+    ${c.refs.map((r,i)=>`
+      <div class="reprow">
+        <button class="btn danger small del" onclick="delRef(${i})">Remove</button>
+        <div class="grid c3">
+          <div><label class="f">Need / domain</label><select onchange="setRef(${i},'domain',this.value)">
+            ${['','Housing','Food','Utilities','Transportation','Primary care','Behavioral health','Job opportunity','Education','Financial/benefits','Digital access','Social support','Violence prevention','Legal/ID','Other'].map(o=>`<option${r.domain===o?' selected':''}>${o}</option>`).join('')}</select></div>
+          <div><label class="f">Provider / service</label><input type="text" value="${esc(r.provider)}" oninput="setRef(${i},'provider',this.value)"></div>
+          <div><label class="f">Date initiated</label><input type="date" value="${esc(r.dateInit)}" oninput="setRef(${i},'dateInit',this.value)"></div>
+          <div><label class="f">Status / outcome</label><select onchange="setRef(${i},'status',this.value)">
+            ${['',...REFERRAL_STATUSES].map(o=>`<option${r.status===o?' selected':''}>${o}</option>`).join('')}</select></div>
+          <div><label class="f">Completion date</label><input type="date" value="${esc(r.dateDone)}" oninput="setRef(${i},'dateDone',this.value)"></div>
+          <div><label class="f">Verification</label><select onchange="setRef(${i},'verification',this.value)">
+            ${VERIFICATION.map(o=>`<option value="${esc(o)}"${r.verification===o?' selected':''}>${esc(o)||'—'}</option>`).join('')}</select></div>
+          <div><label class="f">Referral consent</label><select onchange="setRef(${i},'consent',this.value)">
+            ${['','Verbal','Written'].map(o=>`<option${r.consent===o?' selected':''}>${o||'—'}</option>`).join('')}</select></div>
+          <div><label class="f">Consent date</label><input type="date" value="${esc(r.consentDate)}" oninput="setRef(${i},'consentDate',this.value)"></div>
+          <div><label class="f">Notes</label><input type="text" value="${esc(r.notes)}" oninput="setRef(${i},'notes',this.value)"></div>
+        </div>
+      </div>`).join('') || '<div class="empty">No referrals recorded yet.</div>'}
+    <button class="btn" onclick="addRef()">+ Add referral</button>
+  </div>`;
+}
+function setPriority(i,k,v){
+  const p = cases[currentId].p3.priorities;
+  while(p.length<=i) p.push({});
+  p[i][k]=v; scheduleSave();
+}
+function setGoal(i,k,v){
+  const g = cases[currentId].p3.goals;
+  while(g.length<=i) g.push({});
+  g[i][k]=v; scheduleSave();
+}
+function addRef(){
+  cases[currentId].refs.push({domain:'',provider:'',dateInit:new Date().toISOString().slice(0,10),
+    status:'Referral initiated',dateDone:'',verification:'',consent:'',consentDate:'',notes:''});
+  scheduleSave(); renderPart3(); refreshTabDots();
+}
+function delRef(i){ cases[currentId].refs.splice(i,1); scheduleSave(); renderPart3(); refreshTabDots(); }
+function setRef(i,k,v){ cases[currentId].refs[i][k]=v; scheduleSave(); if(k==='status') refreshTabDots(); }
+
+/* ---------- Part 4 ---------- */
+function renderPart4(){
+  const c = cases[currentId];
+  document.getElementById('part4').innerHTML = `
+  <div class="card">
+    <h2>Part 4 — Follow-Up and Service Coordination</h2>
+    <p class="hint">The project narrative anticipates approximately three to six follow-up contacts based on participant need.
+      A contact counts toward the follow-up measure when <b>Contact type = Completed</b> and
+      <b>Meets program definition = Yes</b> (a voicemail alone is an attempt, not completed follow-up).</p>
+    ${c.p4.map((f,i)=>`
+      <div class="reprow">
+        <button class="btn danger small del" onclick="delFU(${i})">Remove</button>
+        <div class="grid c3">
+          <div><label class="f">Contact date</label><input type="date" value="${esc(f.date)}" oninput="setFU(${i},'date',this.value)"></div>
+          <div><label class="f">Contact method</label><select onchange="setFU(${i},'method',this.value)">
+            ${['',...CONTACT_METHODS].map(o=>`<option${f.method===o?' selected':''}>${o}</option>`).join('')}</select></div>
+          <div><label class="f">Contact type</label><select onchange="setFU(${i},'contactType',this.value)">
+            ${['','Completed','Attempt only'].map(o=>`<option${f.contactType===o?' selected':''}>${o||'—'}</option>`).join('')}</select></div>
+          <div><label class="f">Participant reached?</label><select onchange="setFU(${i},'reached',this.value)">
+            ${['','Yes','No'].map(o=>`<option${f.reached===o?' selected':''}>${o||'—'}</option>`).join('')}</select></div>
+          <div><label class="f">Connected with the provider?</label><select onchange="setFU(${i},'connected',this.value)">
+            ${['','Yes','No','Partly','Not applicable'].map(o=>`<option${f.connected===o?' selected':''}>${o||'—'}</option>`).join('')}</select></div>
+          <div><label class="f">Received a referred service?</label><select onchange="setFU(${i},'received',this.value)">
+            ${['','Yes','No','Pending','Not verified'].map(o=>`<option${f.received===o?' selected':''}>${o||'—'}</option>`).join('')}</select></div>
+          <div><label class="f">Verification source</label><select onchange="setFU(${i},'verification',this.value)">
+            ${['','Participant','Partner','Record/document','Other'].map(o=>`<option${f.verification===o?' selected':''}>${o||'—'}</option>`).join('')}</select></div>
+          <div><label class="f">Income changed since last contact?</label><select onchange="setFU(${i},'incomeChanged',this.value)">
+            ${['','Increased','Decreased','No change','Unknown','Declined'].map(o=>`<option${f.incomeChanged===o?' selected':''}>${o||'—'}</option>`).join('')}</select></div>
+          <div><label class="f">New or changed needs?</label><select onchange="setFU(${i},'newNeeds',this.value)">
+            ${['','Yes','No'].map(o=>`<option${f.newNeeds===o?' selected':''}>${o||'—'}</option>`).join('')}</select></div>
+        </div>
+        <div style="margin-top:10px">${(() => {
+          const cur = f.barriers||[];
+          return `<label class="f">What barriers remain?</label><div class="checks">` +
+            ['Unable to contact provider','Waitlist','Ineligible','Transportation','Cost','Other'].map(o=>
+              `<label><input type="checkbox" ${cur.includes(o)?'checked':''} onchange="toggleFUBarrier(${i},${JSON.stringify(o).replace(/"/g,'&quot;')},this.checked)"> ${esc(o)}</label>`).join('') + '</div>';
+        })()}</div>
+        <div class="grid c3" style="margin-top:10px">
+          <div><label class="f">Case status after this contact</label><select onchange="setFU(${i},'caseStatus',this.value)">
+            ${['','Active','Needs supervisor review','Ready for exit','Closed early'].map(o=>`<option${f.caseStatus===o?' selected':''}>${o||'—'}</option>`).join('')}</select></div>
+          <div><label class="f">Meets program definition of completed follow-up?</label><select onchange="setFU(${i},'meetsDef',this.value)">
+            ${['','Yes','No'].map(o=>`<option${f.meetsDef===o?' selected':''}>${o||'—'}</option>`).join('')}</select></div>
+          <div><label class="f">Has at least one referral been completed?</label><select onchange="setFU(${i},'refCompleted',this.value)">
+            ${['','Yes','No','Pending verification','No referral required'].map(o=>`<option${f.refCompleted===o?' selected':''}>${o||'—'}</option>`).join('')}</select></div>
+          <div><label class="f">Next contact date</label><input type="date" value="${esc(f.nextDate)}" oninput="setFU(${i},'nextDate',this.value)"></div>
+        </div>
+        <div style="margin-top:10px"><label class="f">Progress, next steps and notes</label>
+          <textarea oninput="setFU(${i},'notes',this.value)">${esc(f.notes||'')}</textarea></div>
+      </div>`).join('') || '<div class="empty">No follow-up contacts recorded yet.</div>'}
+    <button class="btn" onclick="addFU()">+ Add follow-up contact</button>
+  </div>`;
+}
+function addFU(){
+  cases[currentId].p4.push({date:new Date().toISOString().slice(0,10), method:'Phone', contactType:'',
+    reached:'', connected:'', received:'', verification:'', barriers:[], newNeeds:'', incomeChanged:'',
+    caseStatus:'Active', meetsDef:'', refCompleted:'', nextDate:'', notes:''});
+  scheduleSave(); renderPart4(); refreshTabDots();
+}
+function delFU(i){ cases[currentId].p4.splice(i,1); scheduleSave(); renderPart4(); refreshTabDots(); }
+function setFU(i,k,v){ cases[currentId].p4[i][k]=v; scheduleSave(); if(k==='contactType'||k==='meetsDef') refreshTabDots(); }
+function toggleFUBarrier(i,opt,on){
+  const arr = cases[currentId].p4[i].barriers || (cases[currentId].p4[i].barriers=[]);
+  const j = arr.indexOf(opt);
+  if(on && j<0) arr.push(opt);
+  if(!on && j>=0) arr.splice(j,1);
+  scheduleSave();
+}
+
+/* ---------- Part 5 ---------- */
+function renderPart5(){
+  const c = cases[currentId];
+  const p = c.p5;
+  const d = derived(c);
+  document.getElementById('part5').innerHTML = `
+  <div class="card">
+    <h2>Part 5 — Outcome Reassessment and Exit Survey</h2>
+    <p class="hint">Complete at planned exit, final follow-up or case closure whenever the participant is available.</p>
+    <h3>A. Reassessment of identified needs</h3>
+    <div style="overflow-x:auto"><table><thead><tr><th>Domain</th><th>Status at exit</th><th>Evidence or comment</th></tr></thead><tbody>
+      ${EXIT_DOMAINS.map(([k,label])=>`<tr>
+        <td style="font-weight:600">${label}</td>
+        <td style="width:200px"><select onchange="setExit('reassess','${k}',this.value)">
+          ${EXIT_STATUS.map(o=>`<option value="${esc(o)}"${(p.reassess[k]||'')===o?' selected':''}>${esc(o)||'—'}</option>`).join('')}</select></td>
+        <td><input type="text" value="${esc(p.evidence[k]||'')}" oninput="setExit('evidence','${k}',this.value)"></td></tr>`).join('')}
+    </tbody></table></div>
+    <h3>B. Service and referral outcomes</h3>
+    <div class="kv" style="margin-bottom:10px">
+      <div class="k">Total referrals initiated (from Part 3)</div><div class="v">${d.refInit||0}</div>
+      <div class="k">Referrals with status "Service received/completed"</div><div class="v">${d.refDoneCount||0}</div>
+    </div>
+    <div class="grid c3">
+      ${fld('p5','incomeExit','Gross monthly household income at exit ($)','number',null,null,'min="0" step="1"')}
+      ${fld('p5','incomeExitStatus','Income figure is','select',['','Verified','Self-reported','Not collected'])}
+      ${fld('p5','incomeChange','Income change from intake','select',['','Increased','Decreased','No change','Unable to determine'])}
+      ${fld('p5','remainsConnected','Participant remains connected to ongoing support','select',['','Yes','No','Not needed'])}
+    </div>
+    ${fld('p5','reasonNotCompleted','Reason referrals were not completed, if applicable','textarea')}
+    <h4>Direct services received (tick all that apply — feeds the DS performance measures)</h4>
+    <div class="checks">
+      ${DIRECT_SERVICES.map(s=>`<label><input type="checkbox" ${p.ds[s.key]?'checked':''}
+        onchange="cases[currentId].p5.ds['${s.key}']=this.checked;scheduleSave();refreshTabDots()"> ${esc(s.label)}</label>`).join('')}
+    </div>
+    <h3>C. Exit survey — participant experience</h3>
+    <div class="grid c2">
+      ${fld('p5','s1','I understood the services and referrals offered to me.','select',AGREE)}
+      ${fld('p5','s2','The navigator treated me with respect and listened to my priorities.','select',AGREE)}
+      ${fld('p5','s3','The program helped me access at least one useful resource or service.','select',AGREE)}
+      ${fld('p5','s4','I feel more confident finding help when I need it.','select',AGREE)}
+      ${fld('p5','rating','Overall program rating','select',['','Excellent','Good','Fair','Poor'])}
+      ${fld('p5','mayContact','May AACCAA contact you later about your experience?','select',['','Yes','No'])}
+    </div>
+    ${fld('p5','helpful','What was most helpful?','textarea')}
+    ${fld('p5','improve','What should we improve?','textarea')}
+    <h3>D. Case closure</h3>
+    <div class="grid c3">
+      ${fld('p5','exitDate','Exit/closure date','date')}
+      ${fld('p5','reason','Reason for closure','select',CLOSURE_REASONS)}
+      ${fld('p5','fuMeasure','Completed follow-up performance measure?','select',['','Yes','No'],`Suggested from Part 4: ${d.fuDone==='Y'?'Yes':'No'}`)}
+      ${fld('p5','exitMeasure','Completed exit-survey performance measure?','select',['','Yes','No'],'Leave blank to derive from the survey answers above')}
+      ${fld('p5','refMeasure','At least one completed-referral performance measure?','select',['','Yes','No','Not applicable'],`Suggested from Parts 3/4: ${d.refDone==='Y'?'Yes':'No'}`)}
+    </div>
+    ${fld('p5','transitionPlan','Unresolved needs and transition plan','textarea')}
+    ${fld('p5','handoff','Final partner handoff or resource information','textarea')}
+    <h3>E. Navigator final review</h3>
+    <div class="checks" style="flex-direction:column;align-items:stretch">
+      ${FINAL_REVIEW.map((t,i)=>`<label><input type="checkbox" ${p.review[i]?'checked':''}
+        onchange="cases[currentId].p5.review[${i}]=this.checked;scheduleSave()"> ${esc(t)}</label>`).join('')}
+    </div>
+    <div class="grid c3" style="margin-top:10px">
+      ${fld('p5','certDate','Certification date','date',null,'“I certify that this record is complete and accurate to the best of my knowledge.” Signatures on the printed packet.')}
+    </div>
+  </div>`;
+}
+function setExit(kind, k, v){ cases[currentId].p5[kind][k] = v; scheduleSave(); }
+
+/* ---------- Part 6 ---------- */
+function renderPart6(){
+  const c = cases[currentId];
+  const p = c.p6;
+  const pts = p.pts;
+  const row = (k, label) => {
+    const pt = pts[k] || (pts[k]={});
+    const cell = (fk, type, extra) =>
+      `<td><input type="${type}" ${extra||''} value="${esc(pt[fk]||'')}" oninput="setPt('${k}','${fk}',this.value)"></td>`;
+    return `<tr><td style="font-weight:600">${label}</td>
+      ${cell('date','date')}${cell('weight','number','step="0.1"')}${cell('bmi','number','step="0.1" id="bmi_'+k+'"')}
+      ${cell('act','number','min="0"')}${cell('fv','number','min="0" step="0.5"')}${cell('sugary','number','min="0" step="0.5"')}
+      ${cell('notes','text')}</tr>`;
+  };
+  const outc = (k, evk, label, opts, hint) => `
+      ${fld('p6',k,label,'select',opts,hint)}
+      ${fld('p6',evk,'Evidence','text')}`;
+  document.getElementById('part6').innerHTML = `
+  <div class="card">
+    <h2>Part 6 — Obesity-Program Outcome Addendum</h2>
+    <p class="hint">Complete only for participants enrolled in obesity-prevention services. Baseline height/weight come from Part 2 item 17.</p>
+    <h3>A. Participation and service exposure</h3>
+    <div class="grid c3">
+      ${fld('p6','enrollDate','Obesity-program enrollment date','date',null,'A recorded date counts the participant as enrolled (target 250)')}
+      ${fld('p6','nNutrition','Number of nutrition sessions attended','number',null,null,'min="0"')}
+      ${fld('p6','nActivity','Number of physical-activity/wellness sessions attended','number',null,null,'min="0"')}
+      ${fld('p6','nCoaching','Coaching contacts completed','number',null,null,'min="0"')}
+    </div>
+    <div style="margin-top:12px">
+      ${multiFld('p6','services','Services received',['Nutrition class','Cooking demonstration','Walking group','Fitness session','Lifestyle coaching','Other'])}
+    </div>
+    <h3>B. Outcome measurement table</h3>
+    <p class="hint">BMI auto-fills from the Part 2 item 17 height. Baseline weight/BMI shown from Part 2 item 17${c.p2.m17.weight?` (${esc(c.p2.m17.weight)} lb${c.p2.m17.bmi?', BMI '+esc(c.p2.m17.bmi):''})`:''}.</p>
+    <div style="overflow-x:auto"><table><thead><tr><th>Point</th><th>Date</th><th>Weight (lb)</th><th>BMI</th><th>Activity min/wk</th><th>Fruit/veg servings/day</th><th>Sugary drinks/day</th><th>Notes</th></tr></thead><tbody>
+      ${row('base','Baseline')}
+      ${row('d60','60 days')}
+      ${row('d90','90 days')}
+      ${row('d180','180 days')}
+    </tbody></table></div>
+    <h3>C. Performance outcome determination</h3>
+    <div class="grid c2">
+      ${outc('calories','caloriesEv','Reduced caloric intake',['','Yes','No','Unable to determine'],'With evidence — food log, class participation, Part 6 B / item 15 responses')}
+      ${outc('activity','activityEv','Increased physical activity',['','Yes','No','Unable to determine'],'Activity min/wk in Part 6 B vs. item 16 baseline')}
+      ${outc('decBMI','decBMIEv','Decreased BMI',['Auto','Yes','No','Unable to determine'],'“Auto” compares latest recorded BMI to the item 17 baseline')}
+      ${outc('m60','m60Ev','Maintained weight loss for 60 days',['','Yes','No','Not due'])}
+      ${outc('m90','m90Ev','Maintained weight loss for 90 days',['','Yes','No','Not due'])}
+      ${outc('m180','m180Ev','Maintained weight loss for 180 days',['','Yes','No','Not due'])}
+    </div>
+  </div>`;
+}
+function setPt(k, fk, v){
+  const pt = cases[currentId].p6.pts[k];
+  pt[fk] = v;
+  if(fk==='weight'){
+    const hIn = totalHeightIn(cases[currentId]);
+    const b = bmiFor(v, hIn);
+    if(b!==''){ pt.bmi = b; const el=document.getElementById('bmi_'+k); if(el) el.value = b; }
+  }
+  scheduleSave();
+}
+
+/* ---------- Additional Info ---------- */
+function renderPart7(){
+  const c = cases[currentId];
+  document.getElementById('part7').innerHTML = `
+  <div class="card">
+    <h2>Additional Information Needed</h2>
+    <p class="hint">Track documents or details still owed on this case (IDs, income verification, agency confirmations).
+      Exports to the <b>Additional Info Tracker</b> sheet of the responses workbook.</p>
+    ${c.p7.map((a,i)=>`
+      <div class="reprow">
+        <button class="btn danger small del" onclick="delAI(${i})">Remove</button>
+        <div class="grid c3">
+          <div><label class="f">Item needed</label><input type="text" value="${esc(a.item)}" oninput="setAI(${i},'item',this.value)"></div>
+          <div><label class="f">Source / link</label><input type="text" value="${esc(a.source)}" oninput="setAI(${i},'source',this.value)" placeholder="Where it comes from (person, agency, URL)"></div>
+          <div><label class="f">Owner</label><input type="text" value="${esc(a.owner)}" oninput="setAI(${i},'owner',this.value)"></div>
+          <div><label class="f">Date requested</label><input type="date" value="${esc(a.requested)}" oninput="setAI(${i},'requested',this.value)"></div>
+          <div><label class="f">Due date</label><input type="date" value="${esc(a.due)}" oninput="setAI(${i},'due',this.value)"></div>
+          <div><label class="f">Date received</label><input type="date" value="${esc(a.received)}" oninput="setAI(${i},'received',this.value)"></div>
+          <div><label class="f">Status</label><select onchange="setAI(${i},'status',this.value)">
+            ${['',...AI_STATUSES].map(o=>`<option${a.status===o?' selected':''}>${o}</option>`).join('')}</select></div>
+          <div style="grid-column:span 2"><label class="f">Notes</label><input type="text" value="${esc(a.notes)}" oninput="setAI(${i},'notes',this.value)"></div>
+        </div>
+      </div>`).join('') || '<div class="empty">Nothing outstanding on this case.</div>'}
+    <button class="btn" onclick="addAI()">+ Add item</button>
+  </div>`;
+}
+function addAI(){
+  cases[currentId].p7.push({item:'',source:'',owner:'',requested:new Date().toISOString().slice(0,10),
+    due:'',received:'',status:'Open',notes:''});
+  scheduleSave(); renderPart7(); refreshTabDots();
+}
+function delAI(i){ cases[currentId].p7.splice(i,1); scheduleSave(); renderPart7(); refreshTabDots(); }
+function setAI(i,k,v){ cases[currentId].p7[i][k]=v; scheduleSave(); if(k==='status') refreshTabDots(); }
+
+/* ---------- Summary ---------- */
+function renderSummary(){
+  const c = cases[currentId]; if(!c) return;
+  const d = derived(c);
+  const row = pmRow(c);
+  document.getElementById('partS').innerHTML = `
+  <div class="card">
+    <h2>Summary — what this case reports to the PM Tracker</h2>
+    <p class="hint">Computed live per the FY27 Performance Measure Data Dictionary; exported column-for-column into the Participants sheet of the FY27 PM Tracker.</p>
+    <div class="kv">
+      ${PM_HEADERS.map((h,i)=>`<div class="k">${esc(h)}</div><div class="v">${esc(row[i])===''?'<span class="summary-no">—</span>':esc(row[i])}</div>`).join('')}
+    </div>
+    <h3>Completeness (measure checklist)</h3>
+    <div>
+      ${[['Newly enrolled — ID, eligibility, income status, consent, determination', d.enrolled==='Y'],
+         ['Assessment completed — all 14 domain summaries marked', assessmentComplete(c)],
+         ['Referred — ≥1 referral initiated', d.refMade==='Y' && d.refInit>0],
+         ['Referral completed — "Service received/completed" + verification', d.refDone==='Y'],
+         ['Follow-up completed — contact Completed + meets definition', d.fuDone==='Y'],
+         ['Exit survey completed', d.exitSurvey==='Y'],
+        ].map(([t,ok])=>`<div>${ok?'<span class="summary-ok">✓</span>':'<span class="summary-no">○</span>'} ${t}</div>`).join('')}
+    </div>
+    <div style="margin-top:12px">${fld('notesRoot','notes','Case notes (exported to the tracker Notes column)','textarea')}</div>
+    <div class="toolbar" style="margin-top:14px">
+      <button class="btn" onclick="exportPMTracker(currentId)">Export this case's PM Tracker row</button>
+      <button class="btn secondary" onclick="exportCaseJSON()">Save case file (JSON)</button>
+    </div>
+  </div>`;
+}
+
+function printPacket(){
+  for(const [tid] of TABS) document.getElementById(tid).hidden = false;
+  window.print();
+  switchTab(activeTab);
+}
+function copyLink(){
+  navigator.clipboard.writeText(TOOL_URL).then(()=>setStatus('Link copied'));
+}
+
+/* ---------- boot ---------- */
+loadStore();
+document.getElementById('toolUrlLine').textContent = TOOL_URL;
+renderHome();
+updateCount();
+restoreBackupFolder();
+// Offline support when hosted (GitHub Pages): cache the blank form so the
+// bookmark works without internet. No-op when opened as a local file.
+if('serviceWorker' in navigator && location.protocol === 'https:'){
+  navigator.serviceWorker.register('./sw.js').catch(()=>{});
+}
+</script>
+</body>
+</html>
