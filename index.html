@@ -167,6 +167,14 @@
       <button class="btn secondary" onclick="exportAddlInfo()">Additional Info</button>
       <button class="btn ghost" onclick="exportAllCasesJSON()">Backup all cases (JSON)</button>
     </div>
+    <h3 style="margin-top:16px">Export for Empower</h3>
+    <p class="hint">Import files matching Empower's sample layouts. <b>Import Households &amp; Participants first</b>, then the others — IDs and the import source stay consistent across all files automatically.</p>
+    <div class="toolbar" style="margin:0">
+      <button class="btn secondary" onclick="exportEmpowerHH()">1 · Households &amp; Participants</button>
+      <button class="btn secondary" onclick="exportEmpowerIncome()">2 · Income</button>
+      <button class="btn secondary" onclick="exportEmpowerNotes()">3 · Case Notes</button>
+      <button class="btn secondary" onclick="exportEmpowerEnroll()">4 · Enrollment &amp; Services</button>
+    </div>
   </div>
 </main>
 
@@ -572,6 +580,122 @@ window.REF_HEADERS = REF_HEADERS; window.FU_HEADERS = FU_HEADERS; window.SP_HEAD
 window.DD_HEADERS = DD_HEADERS; window.AI_HEADERS = AI_HEADERS;
 
 const AI_STATUSES = ['Open','Waiting on participant','Waiting on agency','Received','No longer needed'];
+
+/* =====================================================================
+   Empower import files — column layouts match the vendor sample files
+   verbatim. EDIT THE VALUES BELOW to match your Empower data dictionary
+   ("Definition" downloads): left side = this tool's wording, right side
+   = the exact Empower value. Unmapped values export blank rather than
+   guessing wrong data. ImportSource must stay identical across files.
+   ===================================================================== */
+const EMPOWER = {
+  importSource: 'AACCAA SDOH Tool',
+  program: 'FY27 SDOH Healthy Families & Community Wellness',
+  caseNoteCategory: 'Case Management',
+  maps: {
+    gender: {'Woman':'Female','Man':'Male'},
+    ethnicity: {'Hispanic/Latino':'Hispanic / Latino','Not Hispanic/Latino':'Non-Hispanic / Not Latino'},
+    race: {'American Indian/Alaska Native':'American Indian or Alaska Native','Asian':'Asian',
+           'Black/African American':'Black or African American',
+           'Native Hawaiian/Pacific Islander':'Native Hawaiian or Other Pacific Islander','White':'White'},
+    housing: {'Staying with others':'Living with Family/Friends','Temporary housing':'Temporary Housing',
+              'Shelter':'Homeless Shelter','Unsheltered':'Homeless'},  // 'Own/rent' is ambiguous → left blank
+    employment: {'Full-time':'Employed-Full time','Part-time':'Employed-Part time','Temporary':'Employed-Temporary',
+                 'Unemployed':'Unemployed','Unable to work':'Unable to Work','Retired':'Retired'},
+    edlevel: {'Diploma/GED':'12 Yrs (GED HS equivalency)'},
+    insurance: {'No':'0-No Health Insurance'},
+  },
+};
+const EMP_HH_HEADER = "recordtype,ImportSource,householdid,housingstatus,familytype,numberadults,numberchildren,nseniors,manualoverride,participantid,firstname,middlename,lastname,suffix,ssn,altid,altidtype,dob,estimateddob,email,gender,phonetype,phonelist,phoneext,racelist,ethnicity,languages,disabled,healthinsurance,maritalstatus,edlevel,vetstatus,employmentstatus,participantstatus,enteredby,entrydate,uscitizen,headofhousehold,relationship,percentage,physicaladressid,padrtype,physicaladdrprimary,physicaladdress1,physicaladdress2,physicaladdresscity,physicaladdressstate,physicaladdresszip,physicaladdresscounty,physicaladdressdate,mailingaddressid,madrtype,mailingadrprimary,mailingaddress1,mailingaddress2,mailingaddresscity,mailingaddressstate_a,mailingaddresszip,mailingaddresscounty,mailingaddressdate".split(',');
+const EMP_INC_HEADER = "RecordType,ISource,ParticipantID,HouseholdID,IncomeID,IDate,Code,Source,period,Amount".split(',');
+const EMP_NOTE_HEADER = "recordtype,ImportSource,casenoteid,HouseholdID,participantid,notedate,notetime,staffmember,category,casenote,confidential,Import".split(',');
+const EMP_ENR_HEADER = "RecordType,importSource,Record ID,HouseholdID,participantid,Program,Status,StartDate,EndDate,Service Date,Service Description,Outcome,Outcome Date".split(',');
+window.EMP_HH_HEADER = EMP_HH_HEADER;
+
+function empMap(map, v){ return (EMPOWER.maps[map]||{})[v] || ''; }
+function splitName(legal){
+  const parts = (legal||'').trim().split(/\s+/);
+  if(parts.length===0 || !parts[0]) return ['','',''];
+  if(parts.length===1) return [parts[0],'',''];
+  return [parts[0], parts.slice(1,-1).join(' '), parts[parts.length-1]];
+}
+function empowerHHRow(c){
+  const p1=c.p1, d=derived(c);
+  const [first, middle, last] = splitName(p1.legalName);
+  const row = {};
+  EMP_HH_HEADER.forEach(h=>row[h]='');
+  Object.assign(row, {
+    recordtype:'Households & Participants', ImportSource:EMPOWER.importSource,
+    householdid:p1.pid, participantid:p1.pid,
+    housingstatus: empMap('housing', p1.housingArr),
+    numberadults: p1.adults||'', numberchildren: p1.children||'',
+    firstname:first, middlename:middle, lastname:last,
+    dob: fmtDate(p1.dob), email:p1.email,
+    gender: empMap('gender', p1.gender),
+    phonetype: p1.phone?'Mobile':'', phonelist: p1.phone,
+    racelist: (p1.race||[]).map(r=>empMap('race',r)).filter(Boolean).join(';'),
+    ethnicity: empMap('ethnicity', p1.ethnicity),
+    languages: p1.language ? p1.language.toLowerCase() : '',
+    healthinsurance: empMap('insurance', (c.p2.answers.d05||{}).insurance),
+    edlevel: empMap('edlevel', (c.p2.answers.d08||{}).level),
+    employmentstatus: empMap('employment', (c.p2.answers.d07||{}).status),
+    participantstatus:'Active', entrydate: d.assessDate,
+    headofhousehold:'Yes', relationship:'Primary',
+    padrtype: p1.address?'Physical':'', physicaladdrprimary: p1.address?'No':'',
+    physicaladdress1: p1.address, physicaladdresscity: p1.city,
+    physicaladdressstate: p1.address?'MD':'', physicaladdresszip: p1.zip,
+    physicaladdresscounty: p1.address?'Anne Arundel':'',
+  });
+  return EMP_HH_HEADER.map(h=>row[h]);
+}
+window.empowerHHRowFor = id => empowerHHRow(cases[id]);
+function exportEmpowerHH(){
+  download(`Empower_Households_Participants_${stamp()}.csv`,
+    toCSV(EMP_HH_HEADER, selectedCases().filter(c=>c.p1.pid).map(empowerHHRow)));
+}
+function exportEmpowerIncome(){
+  const rows = [];
+  for(const c of selectedCases()){
+    if(!c.p1.pid || !c.p1.totalMonthly) continue;
+    rows.push(['Income', EMPOWER.importSource, c.p1.pid, c.p1.pid, c.p1.pid+'-INC1',
+               fmtDate(c.p1.assessDate), '', 'Other', 'Monthly', c.p1.totalMonthly]);
+  }
+  download(`Empower_Income_${stamp()}.csv`, toCSV(EMP_INC_HEADER, rows));
+}
+function exportEmpowerNotes(){
+  const rows = [];
+  let n = 0;
+  for(const c of selectedCases()){
+    if(!c.p1.pid) continue;
+    const d = derived(c);
+    if(d.assessDone==='Y'){
+      const needs = DOMAINS.filter(dm=>(c.p2.summaries[dm.key]||{}).screen==='Yes').map(dm=>dm.short).join(', ') || 'none identified';
+      rows.push(['Case Notes', EMPOWER.importSource, ++n, c.p1.pid, c.p1.pid, d.assessDate, 0, c.p1.navigator,
+                 EMPOWER.caseNoteCategory, `SDOH assessment completed. Positive screens: ${needs}.`, 'No', 'Import']);
+    }
+    for(const f of c.p4){
+      if(!f.notes) continue;
+      rows.push(['Case Notes', EMPOWER.importSource, ++n, c.p1.pid, c.p1.pid, fmtDate(f.date), 0, c.p1.navigator,
+                 EMPOWER.caseNoteCategory, `Follow-up (${f.contactType||'contact'}): ${f.notes}`, 'No', 'Import']);
+    }
+  }
+  download(`Empower_Case_Notes_${stamp()}.csv`, toCSV(EMP_NOTE_HEADER, rows));
+}
+function exportEmpowerEnroll(){
+  const rows = [];
+  for(const c of selectedCases()){
+    const d = derived(c);
+    if(!c.p1.pid || d.enrolled!=='Y') continue;
+    const services = DIRECT_SERVICES.filter(s=>c.p5.ds[s.key]).map(s=>s.label);
+    if(!services.length) services.push('SDOH assessment and navigation');
+    services.forEach((svc,i)=>{
+      rows.push(['Enrollment', EMPOWER.importSource, `${c.p1.pid}-${i+1}`, c.p1.pid, c.p1.pid,
+                 EMPOWER.program, 'Enrolled', d.assessDate, d.exitDate, d.exitDate||d.assessDate, svc,
+                 d.closure||'None', d.exitDate]);
+    });
+  }
+  download(`Empower_Enrollment_Services_${stamp()}.csv`, toCSV(EMP_ENR_HEADER, rows));
+}
 
 /* =====================================================================
    Data layer
