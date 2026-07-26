@@ -420,7 +420,7 @@ const DOMAINS = [
     {k:'burden', l:'Does caregiving make it difficult to attend appointments, work, shop for food or care for your own health?', t:'select', o:YND},
   ]},
   {n:7, key:'d07', short:'Employment', name:'7. Employment and job opportunity', qs:[
-    {k:'status', l:'Current employment status', t:'select', o:['','Full-time','Part-time','Temporary','Unemployed','Unable to work','Retired']},
+    {k:'status', l:'Current employment status', t:'select', o:['','Full-time','Part-time','Temporary','Unemployed (less than 6 months)','Unemployed (6 months or more)','Unable to work','Retired']},
     {k:'seeking', l:'Are you seeking a job, more hours, a better job or training?', t:'select', o:['','Yes','No','Not now','Declined']},
     {k:'barriers', l:'Which barriers are affecting employment?', t:'multi', o:['Transportation','Childcare','Skills','Credentials','Record','Health','Other']},
     {k:'assist', l:'Do you need resume, application, interview, digital-skills, training or placement assistance?', t:'select', o:YNNS},
@@ -596,10 +596,9 @@ const EMPOWER = {
   noteCategoryByMethod: {'Phone':'Phone Call','Text':'General Note','In person':'Client Office Visit','Virtual':'General Note'},
   // Values below match the AACCAA empowOR Standard Plugin managed lists verbatim
   // (Item Mapping export, July 2026). Deliberately unmapped (export blank rather
-  // than guess): 'Own/rent' housing (Homeowner vs Rent unknown), 'Some college'
-  // (no matching level), 'Unemployed' (list requires </> 6-month duration),
-  // gender 'Another identity' and demographic 'Declined' where no refusal value
-  // exists in the list.
+  // than guess): 'Some college' (no matching level in the agency list), gender
+  // 'Another identity' and demographic 'Declined' where the list has no refusal
+  // value.
   maps: {
     gender: {'Woman':'Female','Man':'Male',"Nonbinary":"Doesn't identify as male, female or transgender"},
     ethnicity: {'Hispanic/Latino':'Hispanic / Latino','Not Hispanic/Latino':'Non-Hispanic / Not Latino',
@@ -608,11 +607,13 @@ const EMPOWER = {
            'Black/African American':'Black/ African American',
            'Native Hawaiian/Pacific Islander':'Native Hawaiian and Other Pacific Islander',
            'White':'White','Another race':'Other Race'},
-    housing: {'Staying with others':'Other','Temporary housing':'Other',
+    housing: {'Own':'Homeowner','Rent':'Rent','Staying with others':'Other','Temporary housing':'Other',
               'Shelter':'Homeless','Unsheltered':'Homeless','Other':'Other'},
     employment: {'Full-time':'Employed-Full time',
                  'Part-time':'Employed-Part time (including multiple part time jobs)',
                  'Temporary':'Season/Temporary Employment',
+                 'Unemployed (less than 6 months)':'Unemployed (< 6 Months)',
+                 'Unemployed (6 months or more)':'Unemployed (>6 Months)',
                  'Unable to work':'Not in Labor Force','Retired':'Not in Labor Force'},
     edlevel: {'Less than high school':'9-12/Non-Graduate','Diploma/GED':'12 Yrs (GED HS equivalency)',
               'Degree':'16 Yrs (Received BA/BS)'},
@@ -1395,7 +1396,7 @@ function renderPart1(){
       ${fld('p1','resident','Anne Arundel County resident verified?','select',['','Yes','No','Pending'])}
       ${fld('p1','age18','Age 18 or older?','select',['','Yes','No'])}
       ${fld('p1','group','Participant group','select',['','Adult individual','Parent/caregiver','Older adult','Other'])}
-      ${fld('p1','housingArr','Current housing arrangement','select',['','Own/rent','Staying with others','Temporary housing','Shelter','Unsheltered','Other'])}
+      ${fld('p1','housingArr','Current housing arrangement','select',['','Own','Rent','Staying with others','Temporary housing','Shelter','Unsheltered','Other'])}
       ${fld('p1','householdSize','Household size','select',['','1','2','3','4','5','6 or more'])}
       ${fld('p1','involvement','Current AACCAA involvement','select',['','New to AACCAA','Existing AACCAA participant','Referred from another AACCAA program'])}
     </div>
