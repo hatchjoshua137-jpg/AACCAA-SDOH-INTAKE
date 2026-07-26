@@ -629,8 +629,10 @@ function empowerHHRow(c){
     householdid:p1.pid, participantid:p1.pid,
     housingstatus: empMap('housing', p1.housingArr),
     numberadults: p1.adults||'', numberchildren: p1.children||'',
+    manualoverride:'No',                          // definition: do not leave blank
     firstname:first, middlename:middle, lastname:last,
-    dob: fmtDate(p1.dob), email:p1.email,
+    dob: fmtDate(p1.dob), estimateddob: p1.dob ? 'No' : '',   // 'No' required whenever DOB present
+    email:p1.email,
     gender: empMap('gender', p1.gender),
     phonetype: p1.phone?'Mobile':'', phonelist: p1.phone,
     racelist: (p1.race||[]).map(r=>empMap('race',r)).filter(Boolean).join(';'),
@@ -689,8 +691,10 @@ function exportEmpowerEnroll(){
     const services = DIRECT_SERVICES.filter(s=>c.p5.ds[s.key]).map(s=>s.label);
     if(!services.length) services.push('SDOH assessment and navigation');
     services.forEach((svc,i)=>{
+      // Start/End/Service dates are required by the definition; active cases
+      // fall back to the assessment date until an exit date exists.
       rows.push(['Enrollment', EMPOWER.importSource, `${c.p1.pid}-${i+1}`, c.p1.pid, c.p1.pid,
-                 EMPOWER.program, 'Enrolled', d.assessDate, d.exitDate, d.exitDate||d.assessDate, svc,
+                 EMPOWER.program, 'Enrolled', d.assessDate, d.exitDate||d.assessDate, d.exitDate||d.assessDate, svc,
                  d.closure||'None', d.exitDate]);
     });
   }
