@@ -167,8 +167,8 @@
       <button class="btn secondary" onclick="exportAddlInfo()">Additional Info</button>
       <button class="btn ghost" onclick="exportAllCasesJSON()">Backup all cases (JSON)</button>
     </div>
-    <h3 style="margin-top:16px">Export for Empower</h3>
-    <p class="hint">Import files matching Empower's sample layouts. <b>Import Households &amp; Participants first</b>, then the others — IDs and the import source stay consistent across all files automatically.</p>
+    <h3 style="margin-top:16px">Export for empowOR</h3>
+    <p class="hint">Import files matching empowOR's sample layouts. <b>Import Households &amp; Participants first</b>, then the others — IDs and the import source stay consistent across all files automatically.</p>
     <div class="toolbar" style="margin:0">
       <button class="btn secondary" onclick="exportEmpowerHH()">1 · Households &amp; Participants</button>
       <button class="btn secondary" onclick="exportEmpowerIncome()">2 · Income</button>
@@ -582,10 +582,10 @@ window.DD_HEADERS = DD_HEADERS; window.AI_HEADERS = AI_HEADERS;
 const AI_STATUSES = ['Open','Waiting on participant','Waiting on agency','Received','No longer needed'];
 
 /* =====================================================================
-   Empower import files — column layouts match the vendor sample files
-   verbatim. EDIT THE VALUES BELOW to match your Empower data dictionary
+   empowOR import files — column layouts match the vendor sample files
+   verbatim. EDIT THE VALUES BELOW to match your empowOR data dictionary
    ("Definition" downloads): left side = this tool's wording, right side
-   = the exact Empower value. Unmapped values export blank rather than
+   = the exact empowOR value. Unmapped values export blank rather than
    guessing wrong data. ImportSource must stay identical across files.
    ===================================================================== */
 const EMPOWER = {
@@ -667,7 +667,7 @@ function empowerHHRow(c){
 }
 window.empowerHHRowFor = id => empowerHHRow(cases[id]);
 function exportEmpowerHH(){
-  download(`Empower_Households_Participants_${stamp()}.csv`,
+  download(`empowOR_Households_Participants_${stamp()}.csv`,
     toCSV(EMP_HH_HEADER, selectedCases().filter(c=>c.p1.pid).map(empowerHHRow)));
 }
 function exportEmpowerIncome(){
@@ -677,7 +677,7 @@ function exportEmpowerIncome(){
     rows.push(['Income', EMPOWER.importSource, c.p1.pid, c.p1.pid, c.p1.pid+'-INC1',
                fmtDate(c.p1.assessDate), '', 'Other', 'Monthly', c.p1.totalMonthly]);
   }
-  download(`Empower_Income_${stamp()}.csv`, toCSV(EMP_INC_HEADER, rows));
+  download(`empowOR_Income_${stamp()}.csv`, toCSV(EMP_INC_HEADER, rows));
 }
 function exportEmpowerNotes(){
   const rows = [];
@@ -697,7 +697,7 @@ function exportEmpowerNotes(){
                  cat, `Follow-up (${f.contactType||'contact'}): ${f.notes}`, 'No', 'Import']);
     }
   }
-  download(`Empower_Case_Notes_${stamp()}.csv`, toCSV(EMP_NOTE_HEADER, rows));
+  download(`empowOR_Case_Notes_${stamp()}.csv`, toCSV(EMP_NOTE_HEADER, rows));
 }
 function exportEmpowerEnroll(){
   const rows = [];
@@ -714,7 +714,7 @@ function exportEmpowerEnroll(){
                  d.closure||'None', d.exitDate]);
     });
   }
-  download(`Empower_Enrollment_Services_${stamp()}.csv`, toCSV(EMP_ENR_HEADER, rows));
+  download(`empowOR_Enrollment_Services_${stamp()}.csv`, toCSV(EMP_ENR_HEADER, rows));
 }
 
 /* =====================================================================
