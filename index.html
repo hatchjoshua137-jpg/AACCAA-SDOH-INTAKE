@@ -591,19 +591,33 @@ const AI_STATUSES = ['Open','Waiting on participant','Waiting on agency','Receiv
 const EMPOWER = {
   importSource: 'AACCAA SDOH Tool',
   program: 'Social Determinants of Health',
-  caseNoteCategory: 'Case Management',
+  caseNoteCategory: 'General Note',
+  // Case-note category per follow-up contact method (AACCAA Case Note Category list)
+  noteCategoryByMethod: {'Phone':'Phone Call','Text':'General Note','In person':'Client Office Visit','Virtual':'General Note'},
+  // Values below match the AACCAA empowOR Standard Plugin managed lists verbatim
+  // (Item Mapping export, July 2026). Deliberately unmapped (export blank rather
+  // than guess): 'Own/rent' housing (Homeowner vs Rent unknown), 'Some college'
+  // (no matching level), 'Unemployed' (list requires </> 6-month duration),
+  // gender 'Another identity' and demographic 'Declined' where no refusal value
+  // exists in the list.
   maps: {
-    gender: {'Woman':'Female','Man':'Male'},
-    ethnicity: {'Hispanic/Latino':'Hispanic / Latino','Not Hispanic/Latino':'Non-Hispanic / Not Latino'},
-    race: {'American Indian/Alaska Native':'American Indian or Alaska Native','Asian':'Asian',
-           'Black/African American':'Black or African American',
-           'Native Hawaiian/Pacific Islander':'Native Hawaiian or Other Pacific Islander','White':'White'},
-    housing: {'Staying with others':'Living with Family/Friends','Temporary housing':'Temporary Housing',
-              'Shelter':'Homeless Shelter','Unsheltered':'Homeless'},  // 'Own/rent' is ambiguous → left blank
-    employment: {'Full-time':'Employed-Full time','Part-time':'Employed-Part time','Temporary':'Employed-Temporary',
-                 'Unemployed':'Unemployed','Unable to work':'Unable to Work','Retired':'Retired'},
-    edlevel: {'Diploma/GED':'12 Yrs (GED HS equivalency)'},
-    insurance: {'No':'0-No Health Insurance'},
+    gender: {'Woman':'Female','Man':'Male',"Nonbinary":"Doesn't identify as male, female or transgender"},
+    ethnicity: {'Hispanic/Latino':'Hispanic / Latino','Not Hispanic/Latino':'Non-Hispanic / Not Latino',
+                'Declined':'Chose not to respond/Refused/Did not self identify'},
+    race: {'American Indian/Alaska Native':'American Indian/Alaska Native','Asian':'Asian',
+           'Black/African American':'Black/ African American',
+           'Native Hawaiian/Pacific Islander':'Native Hawaiian and Other Pacific Islander',
+           'White':'White','Another race':'Other Race'},
+    housing: {'Staying with others':'Other','Temporary housing':'Other',
+              'Shelter':'Homeless','Unsheltered':'Homeless','Other':'Other'},
+    employment: {'Full-time':'Employed-Full time',
+                 'Part-time':'Employed-Part time (including multiple part time jobs)',
+                 'Temporary':'Season/Temporary Employment',
+                 'Unable to work':'Not in Labor Force','Retired':'Not in Labor Force'},
+    edlevel: {'Less than high school':'9-12/Non-Graduate','Diploma/GED':'12 Yrs (GED HS equivalency)',
+              'Degree':'16 Yrs (Received BA/BS)'},
+    insurance: {'No':'0-No Health Insurance','Yes':'Insured-Unknown Type'},
+    language: {'english':'English','spanish':'Spanish'},
   },
 };
 const EMP_HH_HEADER = "recordtype,ImportSource,householdid,housingstatus,familytype,numberadults,numberchildren,nseniors,manualoverride,participantid,firstname,middlename,lastname,suffix,ssn,altid,altidtype,dob,estimateddob,email,gender,phonetype,phonelist,phoneext,racelist,ethnicity,languages,disabled,healthinsurance,maritalstatus,edlevel,vetstatus,employmentstatus,participantstatus,enteredby,entrydate,uscitizen,headofhousehold,relationship,percentage,physicaladressid,padrtype,physicaladdrprimary,physicaladdress1,physicaladdress2,physicaladdresscity,physicaladdressstate,physicaladdresszip,physicaladdresscounty,physicaladdressdate,mailingaddressid,madrtype,mailingadrprimary,mailingaddress1,mailingaddress2,mailingaddresscity,mailingaddressstate_a,mailingaddresszip,mailingaddresscounty,mailingaddressdate".split(',');
@@ -637,7 +651,7 @@ function empowerHHRow(c){
     phonetype: p1.phone?'Mobile':'', phonelist: p1.phone,
     racelist: (p1.race||[]).map(r=>empMap('race',r)).filter(Boolean).join(';'),
     ethnicity: empMap('ethnicity', p1.ethnicity),
-    languages: p1.language ? p1.language.toLowerCase() : '',
+    languages: p1.language ? (empMap('language', p1.language.trim().toLowerCase()) || 'All Other Languages') : '',
     healthinsurance: empMap('insurance', (c.p2.answers.d05||{}).insurance),
     edlevel: empMap('edlevel', (c.p2.answers.d08||{}).level),
     employmentstatus: empMap('employment', (c.p2.answers.d07||{}).status),
@@ -677,8 +691,9 @@ function exportEmpowerNotes(){
     }
     for(const f of c.p4){
       if(!f.notes) continue;
+      const cat = EMPOWER.noteCategoryByMethod[f.method] || EMPOWER.caseNoteCategory;
       rows.push(['Case Notes', EMPOWER.importSource, ++n, c.p1.pid, c.p1.pid, fmtDate(f.date), 0, c.p1.navigator,
-                 EMPOWER.caseNoteCategory, `Follow-up (${f.contactType||'contact'}): ${f.notes}`, 'No', 'Import']);
+                 cat, `Follow-up (${f.contactType||'contact'}): ${f.notes}`, 'No', 'Import']);
     }
   }
   download(`Empower_Case_Notes_${stamp()}.csv`, toCSV(EMP_NOTE_HEADER, rows));
