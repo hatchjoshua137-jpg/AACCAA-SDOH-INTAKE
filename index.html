@@ -94,6 +94,16 @@
     .print-only{display:block !important}
   }
   .print-only{display:none}
+  #signinOverlay{position:fixed;inset:0;background:var(--navy);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px}
+  #signinOverlay[hidden]{display:none !important}
+  #signinOverlay .box{background:#fff;border-radius:14px;max-width:430px;width:100%;padding:34px 32px;text-align:center}
+  #signinOverlay h1{color:var(--navy);font-size:20px;margin:0 0 6px}
+  #signinOverlay p{font-size:13.5px;color:var(--muted);line-height:1.5}
+  #signinOverlay .err{color:var(--bad);font-size:13px;margin-top:10px}
+  .userchip{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.35);border-radius:20px;padding:5px 13px;font-size:12.5px;color:#fff}
+  .actlog{font-size:12.5px}
+  .actlog td{padding:4px 8px;color:var(--muted)}
+  .actlog td:first-child{white-space:nowrap}
 </style>
 </head>
 <body>
@@ -104,9 +114,23 @@
     <div class="sub">AACCAA &middot; FY27 Healthy Families &amp; Community Wellness Initiative &middot; Participant Assessment, Referral, Follow-Up and Exit</div>
   </div>
   <div class="spacer"></div>
+  <span class="userchip" id="userChip" hidden></span>
   <button id="navCases" class="active" onclick="showView('home')">Cases</button>
   <button id="navShare" onclick="showView('share')">Link &amp; QR</button>
+  <button id="signOutBtn" hidden onclick="signOut()">Sign out</button>
 </header>
+
+<div id="signinOverlay" hidden>
+  <div class="box">
+    <h1>SDOH Assessment Tool</h1>
+    <p>AACCAA FY27 &middot; Authorized program staff only.<br>
+       Sign in with your AACCAA Microsoft&nbsp;365 account to continue.
+       Access is granted by the program administrator.</p>
+    <button class="btn" style="margin-top:14px;width:100%" onclick="startSignIn()">Sign in with Microsoft</button>
+    <p style="margin-top:14px;font-size:12px">This page collects no data; all case records stay on your device and the program's SharePoint.</p>
+    <div class="err" id="signinErr"></div>
+  </div>
+</div>
 
 <!-- ============================ HOME ============================ -->
 <main id="viewHome">
@@ -213,6 +237,112 @@ const TOOL_URL = "https://hatchjoshua137-jpg.github.io/AACCAA-SDOH-INTAKE/"; /*T
 
 const STORE_KEY = 'aaccaa_sdoh_cases_v2';
 const ID_PREFIX = 'AACCAA-27-';
+
+/* =====================================================================
+   Microsoft 365 sign-in (Entra ID, OAuth 2.0 code flow + PKCE)
+   Enforced on the hosted site; the administrator controls who may sign
+   in via the Enterprise application's "Users and groups" list
+   ("Assignment required" = Yes). Local file:// copies run without
+   sign-in for development — field use should always be the hosted app.
+   ===================================================================== */
+const AUTH = {
+  clientId: 'bfedff39-4ad7-4e7b-a580-f5b10f6e5e3d',
+  tenantId: '9096f1e3-6489-408c-8a44-c01f086cf2a1',
+  redirectUri: 'https://hatchjoshua137-jpg.github.io/AACCAA-SDOH-INTAKE/',
+  enforceHosts: ['hatchjoshua137-jpg.github.io'],
+  maxAgeDays: 7,          // re-authenticate at least weekly when online
+};
+const AUTH_KEY = 'aaccaa_sdoh_auth_v1';
+let currentUser = null;
+
+function authRequired(){ return AUTH.enforceHosts.includes(location.hostname); }
+function randChars(n){
+  const a = new Uint8Array(n); crypto.getRandomValues(a);
+  return Array.from(a, b => 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'[b % 62]).join('');
+}
+function b64url(buf){
+  return btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+}
+async function startSignIn(){
+  const verifier = randChars(64);
+  const state = randChars(24);
+  sessionStorage.setItem('sdoh_pkce', verifier);
+  sessionStorage.setItem('sdoh_state', state);
+  const challenge = b64url(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(verifier)));
+  const p = new URLSearchParams({
+    client_id: AUTH.clientId, response_type: 'code', redirect_uri: AUTH.redirectUri,
+    scope: 'openid profile email', state, code_challenge: challenge,
+    code_challenge_method: 'S256', prompt: 'select_account',
+  });
+  location.href = `https://login.microsoftonline.com/${AUTH.tenantId}/oauth2/v2.0/authorize?` + p.toString();
+}
+async function completeSignIn(){
+  const q = new URLSearchParams(location.search);
+  const code = q.get('code');
+  if(!code) return false;
+  const stateOk = q.get('state') === sessionStorage.getItem('sdoh_state');
+  history.replaceState(null, '', location.pathname);   // scrub the code from the URL
+  if(!stateOk) throw new Error('Sign-in state mismatch — please try again.');
+  const body = new URLSearchParams({
+    client_id: AUTH.clientId, grant_type: 'authorization_code', code,
+    redirect_uri: AUTH.redirectUri, code_verifier: sessionStorage.getItem('sdoh_pkce'),
+  });
+  const r = await fetch(`https://login.microsoftonline.com/${AUTH.tenantId}/oauth2/v2.0/token`,
+    {method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body});
+  const tok = await r.json();
+  if(!tok.id_token) throw new Error(tok.error_description || 'Sign-in was not completed.');
+  const claims = JSON.parse(atob(tok.id_token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));
+  const user = { name: claims.name || claims.preferred_username || 'Unknown user',
+                 email: claims.preferred_username || claims.email || '',
+                 oid: claims.oid || '', iat: Date.now() };
+  localStorage.setItem(AUTH_KEY, JSON.stringify(user));
+  currentUser = user;
+  return true;
+}
+function loadAuth(){
+  try{ return JSON.parse(localStorage.getItem(AUTH_KEY)); }catch(e){ return null; }
+}
+function signOut(){
+  localStorage.removeItem(AUTH_KEY);
+  if(authRequired()){
+    location.href = `https://login.microsoftonline.com/${AUTH.tenantId}/oauth2/v2.0/logout?post_logout_redirect_uri=` +
+      encodeURIComponent(AUTH.redirectUri);
+  } else { location.reload(); }
+}
+function showSignin(err){
+  document.getElementById('signinOverlay').hidden = false;
+  if(err) document.getElementById('signinErr').textContent = err;
+}
+function updateUserChip(){
+  const chip = document.getElementById('userChip');
+  const btn = document.getElementById('signOutBtn');
+  if(currentUser){
+    chip.textContent = currentUser.name;
+    chip.hidden = false;
+    btn.hidden = !authRequired();
+  }
+}
+async function initAuth(){
+  if(!authRequired()){ currentUser = loadAuth(); updateUserChip(); return true; }
+  try{ await completeSignIn(); }
+  catch(e){ showSignin(e.message); return false; }
+  const u = currentUser || loadAuth();
+  // Offline (field work): accept the cached identity. Online: re-auth weekly.
+  const fresh = u && (navigator.onLine === false || (Date.now() - u.iat) < AUTH.maxAgeDays * 86400000);
+  if(fresh){ currentUser = u; updateUserChip(); return true; }
+  showSignin();
+  return false;
+}
+window.authRequired = authRequired;   // exposed for automated tests
+
+/* ---------- Per-case activity log (audit trail; travels with backups) ---------- */
+const editLogged = new Set();
+function actor(){ return currentUser ? (currentUser.name || currentUser.email) : 'Local device (no sign-in)'; }
+function logAct(c, action){
+  if(!c) return;
+  (c.log = c.log || []).push({t: new Date().toISOString(), u: actor(), a: action});
+  if(c.log.length > 500) c.log.splice(0, c.log.length - 500);
+}
 
 /* ---------- FY27 PM Tracker → Participants sheet: exact 46-column header ---------- */
 const PM_HEADERS = ["Participant ID","Enrollment Date","Enrollment Month","Navigator","Program Site","ZIP Code","Residency Verified","Age 18+","Household Size","Income Status","Target Pop Basis","Consent (Y/N)","Enrolled (Y/N)","Assessment Completed (Y/N)","Assessment Date","Referral Made (Y/N)","# Referrals Initiated","Referral Completed (Y/N)","# Referrals Completed","Verification Source","Follow-Up Completed (Y/N)","# Follow-Up Contacts","Exit Survey Completed (Y/N)","Exit Date","Closure Reason","DS Housing (Y/N)","DS Food (Y/N)","DS Transport (Y/N)","DS Primary Care (Y/N)","DS Job (Y/N)","DS Violence Prevention (Y/N)","DS Education (Y/N)","OB Enrolled (Y/N)","OB Enroll Date","OB Reduced Calories (Y/N)","OB Increased Activity (Y/N)","OB Decreased BMI (Y/N)","OB Maintain 60d (Y/N)","OB Maintain 90d (Y/N)","OB Maintain 180d (Y/N)","Baseline Weight (lb)","Baseline BMI","60d BMI","90d BMI","180d BMI","Notes"];
@@ -592,6 +722,14 @@ function renderBackupUI(){
 }
 function scheduleSave(){
   setStatus('Saving…');
+  if(currentId){
+    const key = currentId + '|' + activeTab;    // one log entry per section per visit
+    if(!editLogged.has(key)){
+      editLogged.add(key);
+      const label = (TABS.find(t=>t[0]===activeTab)||['','section'])[1];
+      logAct(cases[currentId], 'Edited ' + label);
+    }
+  }
   clearTimeout(saveTimer);
   saveTimer = setTimeout(()=>{ if(currentId){ cases[currentId].updated = new Date().toISOString(); } persist(); if(currentId) refreshTabDots(); }, 400);
 }
@@ -877,6 +1015,7 @@ function exportAddlInfo(){
 }
 function exportCaseJSON(){
   const c = cases[currentId]; if(!c) return;
+  logAct(c, 'Case file exported');
   download(`SDOH_case_${c.p1.pid || currentId}_${stamp()}.json`,
     JSON.stringify({format:'aaccaa-sdoh-case', version:2, cases:{[currentId]:c}}, null, 2),
     'application/json');
@@ -897,7 +1036,7 @@ function loadCaseFile(ev){
         const existing = cases[id];
         if(existing && existing.updated > c.updated &&
            !confirm(`Case ${c.p1.pid || id} on this computer is newer than the file. Overwrite with the file version?`)) continue;
-        cases[id] = c; n++;
+        cases[id] = c; logAct(c, 'Loaded from case file'); n++;
       }
       persist(); renderHome();
       alert(`Loaded ${n} case(s) from ${file.name}.`);
@@ -965,11 +1104,14 @@ function newCase(){
   cases[id] = blankCase();
   cases[id].p1.pid = nextPid();
   cases[id].p1.assessDate = new Date().toISOString().slice(0,10);
+  if(currentUser) cases[id].p1.navigator = currentUser.name;
+  logAct(cases[id], 'Case created');
   persist();
   openCase(id);
 }
 function openCase(id){
   currentId = id; activeTab = 'part1';
+  logAct(cases[id], 'Case opened');
   showView('case');
   renderCase();
 }
@@ -985,6 +1127,7 @@ async function archiveCase(){
     return;
   }
   if(!confirm(`Archive case ${c.p1.pid || '(no ID)'}?\n\nIts backup file stays in the SharePoint folder (with full version history); the case is removed from this computer. To work on it again later, use "Load case file…" and pick it from the SharePoint folder.`)) return;
+  logAct(c, 'Archived off this device');
   await backupToFolder(true);
   if(backupState !== 'ok'){ alert('Backup did not succeed — the case was NOT removed.'); return; }
   delete cases[currentId];
@@ -1719,6 +1862,11 @@ function renderSummary(){
         ].map(([t,ok])=>`<div>${ok?'<span class="summary-ok">✓</span>':'<span class="summary-no">○</span>'} ${t}</div>`).join('')}
     </div>
     <div style="margin-top:12px">${fld('notesRoot','notes','Case notes (exported to the tracker Notes column)','textarea')}</div>
+    <h3>Activity log</h3>
+    <p class="hint">Audit trail for this case — recorded automatically and included in every backup. SharePoint version history and the Microsoft 365 audit log provide the file-level trail.</p>
+    <table class="actlog"><tbody>
+      ${(c.log||[]).slice(-30).reverse().map(e=>`<tr><td>${new Date(e.t).toLocaleString()}</td><td>${esc(e.u)}</td><td>${esc(e.a)}</td></tr>`).join('') || '<tr><td class="empty">No activity recorded yet.</td></tr>'}
+    </tbody></table>
     <div class="toolbar" style="margin-top:14px">
       <button class="btn" onclick="exportPMTracker(currentId)">Export this case's PM Tracker row</button>
       <button class="btn secondary" onclick="exportCaseJSON()">Save case file (JSON)</button>
@@ -1736,11 +1884,15 @@ function copyLink(){
 }
 
 /* ---------- boot ---------- */
-loadStore();
-document.getElementById('toolUrlLine').textContent = TOOL_URL;
-renderHome();
-updateCount();
-restoreBackupFolder();
+(async () => {
+  const ok = await initAuth();          // shows the sign-in overlay when needed
+  if(!ok) return;                       // boot continues after the redirect back
+  loadStore();
+  document.getElementById('toolUrlLine').textContent = TOOL_URL;
+  renderHome();
+  updateCount();
+  restoreBackupFolder();
+})();
 // Offline support when hosted (GitHub Pages): cache the blank form so the
 // bookmark works without internet. No-op when opened as a local file.
 if('serviceWorker' in navigator && location.protocol === 'https:'){

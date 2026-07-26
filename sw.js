@@ -2,7 +2,7 @@
    Network-first so updates roll out immediately; cached copy serves the
    blank form when the navigator is offline. No participant data passes
    through or is stored by this worker. */
-const CACHE = 'sdoh-intake-v1';
+const CACHE = 'sdoh-intake-v2';
 const ASSETS = ['./', './index.html', './manifest.json', './icon.svg'];
 
 self.addEventListener('install', (e) => {
